@@ -42,7 +42,7 @@
         <dependency>
             <groupId>org.flowutils</groupId>
             <artifactId>flowutils</artifactId>
-            <version>0.1</version>
+            <version>0.1.1</version>
         </dependency>
     </dependencies>
 

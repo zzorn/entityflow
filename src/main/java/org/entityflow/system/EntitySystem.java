@@ -7,7 +7,7 @@ import org.entityflow.world.World;
  * A system that is specialized at simulating some aspect of the World.  Processes entities that contain some
  * set of Components that the EntitySystem is interested in.
  */
-// TODO: Rename to one word name, if any good found
+// TODO: Rename to one word name, if any good found. Maybe Processor?  So e.g. PhysicsProcessor, CombatProcessor, etc.
 public interface EntitySystem {
 
     /**

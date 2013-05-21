@@ -45,6 +45,7 @@ public interface Entity {
     /**
      * Returns all components in this entity, by adding them to the specified map, as mappings from component base type to component.
      */
+    // TODO: Restore version that just returns map?
     void getComponents(Map<Class<? extends Component>, Component> componentsOut);
 
     /**

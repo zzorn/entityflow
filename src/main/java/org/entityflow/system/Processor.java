@@ -5,17 +5,16 @@ import org.entityflow.world.World;
 
 /**
  * A system that is specialized at simulating some aspect of the World.  Processes entities that contain some
- * set of Components that the EntitySystem is interested in.
+ * set of Components that the Processor is interested in.
  */
-// TODO: Rename to one word name, if any good found. Maybe Processor?  So e.g. PhysicsProcessor, CombatProcessor, etc.
-public interface EntitySystem {
+public interface Processor {
 
     /**
-     * The base type used when retrieving entity systems.
-     * Typically a system specific interface that a symstem implementation implements.
-     * There can only be one system with each base type registered in a World.
+     * The base type used when retrieving processors.
+     * Typically a processor specific interface that a processor implementation implements.
+     * There can only be one processor with each base type registered in a World.
      */
-    Class<? extends EntitySystem> getBaseType();
+    Class<? extends Processor> getBaseType();
 
     /**
      * Called when the application starts up.

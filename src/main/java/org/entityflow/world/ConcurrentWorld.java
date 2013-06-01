@@ -4,11 +4,11 @@ package org.entityflow.world;
 import org.apache.commons.pool.BasePoolableObjectFactory;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.SoftReferenceObjectPool;
+import org.entityflow.system.Processor;
 import org.entityflow.util.Ticker;
 import org.entityflow.component.Component;
 import org.entityflow.entity.ConcurrentEntity;
 import org.entityflow.entity.Entity;
-import org.entityflow.system.EntitySystem;
 import org.flowutils.Check;
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ConcurrentWorld extends BaseWorld {
 
     // All systems registered with the world
-    private final List<EntitySystem> entitySystems = new ArrayList<EntitySystem>();
+    private final List<Processor> processors = new ArrayList<Processor>();
 
     // The entities list is not modified while a system is processing entities, so processing can be done with multiple threads.
     private final List<Entity> entities = new ArrayList<Entity>();
@@ -34,7 +34,7 @@ public class ConcurrentWorld extends BaseWorld {
     private final ConcurrentMap<Long, Entity> entityLookup = new ConcurrentHashMap<Long, Entity>();
 
     // Lookup map for systems based on class
-    private final Map<Class, EntitySystem> systemLookup = new HashMap<Class, EntitySystem>();
+    private final Map<Class, Processor> processorLookup = new HashMap<Class, Processor>();
 
     // Added and removed entities are first stored in concurrent collections, and then applied to the world at the start of world processing.
     private final ConcurrentMap<Entity, Boolean> addedAndRemovedEntities = new ConcurrentHashMap<Entity, Boolean>();
@@ -66,30 +66,31 @@ public class ConcurrentWorld extends BaseWorld {
     }
 
     @Override
-    public final <T extends EntitySystem> T addSystem(T entitySystem) {
-        Check.notContained(entitySystem, entitySystems, "entitySystems");
-        if (initialized.get()) throw new IllegalStateException("addSystem must be called before init is called.");
+    public final <T extends Processor> T addProcessor(T processor) {
+        Check.notContained(processor, processors, "processors");
+        if (initialized.get()) throw new IllegalStateException("addProcessor must be called before init is called.");
 
-        Class<? extends EntitySystem> baseType = entitySystem.getBaseType();
-        if (systemLookup.containsKey(baseType)) throw new IllegalStateException("A system using the base type '"+baseType+"' is already added!");
+        Class<? extends Processor> baseType = processor.getBaseType();
+        if (processorLookup.containsKey(baseType)) throw new IllegalStateException("A system using the base type '"+baseType+"' is already added!");
 
-        systemLookup.put(baseType, entitySystem);
+        processorLookup.put(baseType, processor);
 
-        entitySystems.add(entitySystem);
+        processors.add(processor);
 
-        return entitySystem;
+        return processor;
     }
 
     @Override
-    public final <T extends EntitySystem> T getSystem(Class<T> systemType) {
-        EntitySystem entitySystem = systemLookup.get(systemType);
-        if (entitySystem == null) throw new IllegalArgumentException("No entity system with the base type " + systemType + " found!");
-        return (T) entitySystem;
+    public final <T extends Processor> T getProcessor(Class<T> processorType) {
+        Processor processor = processorLookup.get(processorType);
+        if (processor == null) throw new IllegalArgumentException("No entity system with the base type " +
+                                                                  processorType + " found!");
+        return (T) processor;
     }
 
-    @Override protected void initSystems() {
-        for (EntitySystem entitySystem : entitySystems) {
-            entitySystem.init(this);
+    @Override protected void initProcessors() {
+        for (Processor processor : processors) {
+            processor.init(this);
         }
     }
 
@@ -117,8 +118,8 @@ public class ConcurrentWorld extends BaseWorld {
         refreshEntities();
 
         // Process entities with systems
-        for (EntitySystem entitySystem : entitySystems) {
-            entitySystem.process();
+        for (Processor processor : processors) {
+            processor.process();
         }
 
     }
@@ -150,8 +151,8 @@ public class ConcurrentWorld extends BaseWorld {
             onShutdown();
 
             // Shutdown in reverse order of initialization
-            for (int i = entitySystems.size() - 1; i >= 0; i--) {
-                entitySystems.get(i).shutdown();
+            for (int i = processors.size() - 1; i >= 0; i--) {
+                processors.get(i).shutdown();
             }
 
             initialized.set(false);
@@ -173,8 +174,8 @@ public class ConcurrentWorld extends BaseWorld {
                 entityLookup.put(entity.getEntityId(), entity);
 
                 // Notify systems
-                for (EntitySystem entitySystem : entitySystems) {
-                    entitySystem.onEntityAdded(entity);
+                for (Processor processor : processors) {
+                    processor.onEntityAdded(entity);
                 }
             }
             else {
@@ -186,8 +187,8 @@ public class ConcurrentWorld extends BaseWorld {
 
                 if (wasRemoved) {
                     // Notify systems
-                    for (EntitySystem entitySystem : entitySystems) {
-                        entitySystem.onEntityRemoved(entity);
+                    for (Processor processor : processors) {
+                        processor.onEntityRemoved(entity);
                     }
 
                     // Cleanup entity
@@ -211,8 +212,8 @@ public class ConcurrentWorld extends BaseWorld {
             final Entity entity = entry.getKey();
 
             // Notify systems
-            for (EntitySystem entitySystem : entitySystems) {
-                entitySystem.onEntityComponentsChanged(entity);
+            for (Processor processor : processors) {
+                processor.onEntityComponentsChanged(entity);
             }
         }
     }

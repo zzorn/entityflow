@@ -22,9 +22,9 @@ public abstract class BaseWorld implements World {
 
         if (initialized.get()) throw new IllegalStateException("World was already initialized, can not initialize again");
 
-        registerSystems();
+        registerProcessors();
 
-        initSystems();
+        initProcessors();
 
         initialized.set(true);
 
@@ -87,7 +87,7 @@ public abstract class BaseWorld implements World {
     /**
      * Can be used to add systems.  Called automatically by init or start before initializing the systems.
      */
-    protected void registerSystems() {
+    protected void registerProcessors() {
     }
 
     /**
@@ -105,7 +105,7 @@ public abstract class BaseWorld implements World {
     /**
      * Should call init for all added systems.
      */
-    protected abstract void initSystems();
+    protected abstract void initProcessors();
 
     /**
      * Should execute any pending additions and removals of entities, and handle entity additions / removals from

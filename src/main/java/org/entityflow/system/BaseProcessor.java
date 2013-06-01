@@ -6,25 +6,26 @@ import org.entityflow.util.Ticker;
 import org.entityflow.world.World;
 
 /**
- * Base class for system implementations, does not do any entity management.
+ * Base class for processor implementations, does not do any entity management.
  */
-public abstract class BaseSystem implements EntitySystem {
+// TODO: Better timestep handling?
+public abstract class BaseProcessor implements Processor {
 
-    protected final Class<? extends EntitySystem> baseType;
+    protected final Class<? extends Processor> baseType;
     protected double processingIntervalSeconds = 0;
     protected final Ticker ticker = new Ticker();
 
     private World world = null;
 
-    protected BaseSystem() {
+    protected BaseProcessor() {
         this(null);
     }
 
-    protected BaseSystem(Class<? extends EntitySystem> baseType) {
+    protected BaseProcessor(Class<? extends Processor> baseType) {
         this(baseType, 0);
     }
 
-    protected BaseSystem(Class<? extends EntitySystem> baseType, double processingIntervalSeconds) {
+    protected BaseProcessor(Class<? extends Processor> baseType, double processingIntervalSeconds) {
         if (baseType == null) this.baseType = getClass();
         else this.baseType = baseType;
 
@@ -48,7 +49,7 @@ public abstract class BaseSystem implements EntitySystem {
     }
 
     @Override
-    public Class<? extends EntitySystem> getBaseType() {
+    public Class<? extends Processor> getBaseType() {
         return baseType;
     }
 

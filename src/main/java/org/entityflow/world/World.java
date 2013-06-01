@@ -1,9 +1,9 @@
 package org.entityflow.world;
 
+import org.entityflow.system.Processor;
 import org.entityflow.util.Ticker;
 import org.entityflow.component.Component;
 import org.entityflow.entity.Entity;
-import org.entityflow.system.EntitySystem;
 
 /**
  * Manages all entities and systems in a game/simulation.
@@ -11,17 +11,17 @@ import org.entityflow.system.EntitySystem;
 public interface World {
 
     /**
-     * Adds an entity system.  Should be done before calling initialize.
+     * Adds a processor.  Should be done before calling initialize.
      */
-    <T extends EntitySystem> T addSystem(T entitySystem);
+    <T extends Processor> T addProcessor(T processor);
 
     /**
-     * @return the system of the specified type.  Throws an exception if not found.
+     * @return the processor of the specified type.  Throws an exception if not found.
      */
-    <T extends EntitySystem> T getSystem(Class<T> systemType);
+    <T extends Processor> T getProcessor(Class<T> processorType);
 
     /**
-     * Initializes all systems.
+     * Initializes all processors.
      */
     void init();
 
@@ -38,17 +38,23 @@ public interface World {
     void start(long simulationStepMilliseconds);
 
     /**
-     * Will stop the main game loop, and shut down all systems, after the next game loop is completed,
+     * Will stop the main game loop, and shut down all processors, after the next game loop is completed,
      * or do the shutdown immediately if the game loop was not started.
      */
     void shutdown();
 
     /**
-     * Add and delete any recently added/removed entities, then call process for each EntitySystem, in the order they were added,
+     * Add and delete any recently added/removed entities, then call process for each Processor, in the order they were added,
      * letting them process the entities they are interested in.
      * @param ticker contains time since last frame and since the beginning of the simulation.
      */
     void process(Ticker ticker);
+
+    /**
+     * @param entityId the id of the entity to get.
+     * @return the entity with the specified id, or null if none found.
+     */
+    Entity getEntity(long entityId);
 
     /**
      * Creates a new entity and adds it to the world.
@@ -64,14 +70,8 @@ public interface World {
     void deleteEntity(Entity entity);
 
     /**
-     * @param entityId the id of the entity to get.
-     * @return the entity with the specified id, or null if none found.
-     */
-    Entity getEntity(long entityId);
-
-    /**
      * Notify the world when components are added or removed to an entity.  This is called automatically by an entity, no need to call manually.
-     * Will notify EntitySystems about the change, so that they can decide if they should add or delete the entity.
+     * Will notify Processors about the change, so that they can decide if they should add or delete the entity.
      */
     void onEntityComponentsChanged(Entity entity);
 

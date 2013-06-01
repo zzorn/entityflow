@@ -53,7 +53,7 @@ public abstract class BaseComponent implements Component {
     @Override
     public final void onRemoved() {
         if (entity == null)
-            throw new IllegalStateException("Can not remove a component that has not been added to any entity");
+            throw new IllegalStateException("Can not delete a component that has not been added to any entity");
 
         handleRemoved(entity);
         entity = null;

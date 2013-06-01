@@ -1,6 +1,9 @@
 package org.entityflow.world;
 
 
+import org.apache.commons.pool.BasePoolableObjectFactory;
+import org.apache.commons.pool.ObjectPool;
+import org.apache.commons.pool.impl.SoftReferenceObjectPool;
 import org.entityflow.util.Ticker;
 import org.entityflow.component.Component;
 import org.entityflow.entity.ConcurrentEntity;
@@ -14,23 +17,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Manages all entities and systems in a game/simulation.
  */
-public class DefaultWorld implements World {
+public class ConcurrentWorld extends BaseWorld {
 
+    // All systems registered with the world
     private final List<EntitySystem> entitySystems = new ArrayList<EntitySystem>();
-    private final AtomicBoolean      initialized   = new AtomicBoolean(false);
-    private final AtomicBoolean      running       = new AtomicBoolean(false);
 
     // The entities list is not modified while a system is processing entities, so processing can be done with multiple threads.
     private final List<Entity> entities = new ArrayList<Entity>();
 
+    // Lookup map for entities based on entity id
     private final ConcurrentMap<Long, Entity> entityLookup = new ConcurrentHashMap<Long, Entity>();
-    private final Map<Class, EntitySystem>    systemLookup = new HashMap<Class, EntitySystem>();
+
+    // Lookup map for systems based on class
+    private final Map<Class, EntitySystem> systemLookup = new HashMap<Class, EntitySystem>();
 
     // Added and removed entities are first stored in concurrent collections, and then applied to the world at the start of world processing.
     private final ConcurrentMap<Entity, Boolean> addedAndRemovedEntities = new ConcurrentHashMap<Entity, Boolean>();
@@ -38,26 +42,27 @@ public class DefaultWorld implements World {
     // Keeps track of changed entities, that is, entities whose components changed, and that may need to be added or removed from systems.
     private final ConcurrentMap<Entity, Boolean> changedEntities = new ConcurrentHashMap<Entity, Boolean>();
 
+    // Next free id for a new entity
     private final AtomicLong nextFreeEntityId = new AtomicLong(1);
 
-    private long simulationStepMilliseconds;
+    // Object pool for recycling entity references
+    private final ObjectPool<Entity> entityPool = new SoftReferenceObjectPool<Entity>(new BasePoolableObjectFactory<Entity>() {
+        @Override public Entity makeObject() throws Exception {
+            return new ConcurrentEntity();
+        }
+    });
 
-    public DefaultWorld() {
+
+    public ConcurrentWorld() {
         this(1);
     }
 
-    public DefaultWorld(long simulationStepMilliseconds) {
+    public ConcurrentWorld(long simulationStepMilliseconds) {
         setSimulationStepMilliseconds(simulationStepMilliseconds);
     }
 
     public long getSimulationStepMilliseconds() {
         return simulationStepMilliseconds;
-    }
-
-    public void setSimulationStepMilliseconds(long simulationStepMilliseconds) {
-        Check.positive(simulationStepMilliseconds, "simulationStepMilliseconds");
-
-        this.simulationStepMilliseconds = simulationStepMilliseconds;
     }
 
     @Override
@@ -82,73 +87,14 @@ public class DefaultWorld implements World {
         return (T) entitySystem;
     }
 
-    @Override
-    public final void init() {
-        // TODO: Add logging support
-        System.out.println("Initializing.");
-
-        if (initialized.get()) throw new IllegalStateException("World was already initialized, can not initialize again");
-
-        registerSystems();
-
+    @Override protected void initSystems() {
         for (EntitySystem entitySystem : entitySystems) {
             entitySystem.init(this);
         }
-
-        initialized.set(true);
-
-        refreshEntities();
-
-        initWorld();
-
-        refreshEntities();
-    }
-
-
-    @Override
-    public final void start(long simulationStepMilliseconds) {
-        setSimulationStepMilliseconds(simulationStepMilliseconds);
-
-        start();
     }
 
     @Override
-    public final void start() {
-        // Initialize if needed
-        if (!initialized.get()) init();
-
-        // Main simulation loop
-        Ticker ticker = new Ticker();
-        running.set(true);
-        while(running.get()) {
-            ticker.tick();
-
-            process(ticker);
-
-            try {
-                Thread.sleep(simulationStepMilliseconds);
-            } catch (InterruptedException e) {
-                // Ignore
-            }
-        }
-
-        // Do shutdown
-        doShutdown();
-    }
-
-    @Override
-    public final void shutdown() {
-        if (running.get()) {
-            // Let game loop call doShutdown after the next loop is ready
-            running.set(false);
-        }
-        else {
-            doShutdown();
-        }
-    }
-
-    @Override
-    public void removeEntity(Entity entity) {
+    public void deleteEntity(Entity entity) {
         Check.notNull(entity, "entity");
         Check.equalRef(entity.getWorld(), "world of the removed entity", this, "the world it is removed from.");
 
@@ -182,8 +128,15 @@ public class DefaultWorld implements World {
         // Get id
         final long entityId = nextFreeEntityId.getAndIncrement();
 
-        // Create entity class
-        Entity entity = new ConcurrentEntity(entityId, this, components);
+        // Create entity class, or reuse a previous one
+        final Entity entity;
+        try {
+            entity = entityPool.borrowObject();
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not create a new entity, problem creating entity object with pool: " + e.getMessage(), e);
+        }
+        entity.init(entityId, this);
+        entity.addComponents(components);
 
         // Schedule for addition
         addedAndRemovedEntities.put(entity, true);
@@ -191,26 +144,8 @@ public class DefaultWorld implements World {
         return entity;
     }
 
-    /**
-     * Can be used to add systems.  Called automatically by init or start before initializing the systems.
-     */
-    protected void registerSystems() {
-    }
 
-    /**
-     * Can be used to initialize the world.  Called automatically by the init or start after systems have been initialized.
-     */
-    protected void initWorld() {
-    }
-
-    /**
-     * Can be used to do any additional things before shutdown.  Called by shutdown before systems are shut down.
-     */
-    protected void onShutdown() {
-    }
-
-
-    private void doShutdown() {
+    @Override protected void doShutdown() {
         if (initialized.get()) {
             onShutdown();
 
@@ -226,8 +161,8 @@ public class DefaultWorld implements World {
         }
     }
 
-    private void refreshEntities() {
-        // Add and remove entities marked for addition or removal.
+    @Override protected void refreshEntities() {
+        // Add and delete entities marked for addition or removal.
         for (Map.Entry<Entity, Boolean> entry : addedAndRemovedEntities.entrySet()) {
             boolean add = entry.getValue();
             Entity entity = entry.getKey();
@@ -235,7 +170,6 @@ public class DefaultWorld implements World {
             if (add) {
                 // Add entity
                 entities.add(entity);
-
                 entityLookup.put(entity.getEntityId(), entity);
 
                 // Notify systems
@@ -247,20 +181,26 @@ public class DefaultWorld implements World {
                 // Remove entity (if contained)
                 final boolean wasRemoved = entities.remove(entity);
 
+                // Do not process any outstanding changes to the entity
+                changedEntities.remove(entity);
+
                 if (wasRemoved) {
                     // Notify systems
                     for (EntitySystem entitySystem : entitySystems) {
                         entitySystem.onEntityRemoved(entity);
                     }
 
-                    long entityId = entity.getEntityId();
-
                     // Cleanup entity
-                    entity.onRemoved();
-
+                    long entityId = entity.getEntityId();
+                    entity.onDeleted();
                     entityLookup.remove(entityId);
 
-                    // TODO: Recycle entity
+                    // Recycle entity
+                    try {
+                        entityPool.returnObject(entity);
+                    } catch (Exception e) {
+                        throw new IllegalStateException("Could not recycle entity " + entity + ": " + e.getMessage(), e);
+                    }
                 }
             }
         }

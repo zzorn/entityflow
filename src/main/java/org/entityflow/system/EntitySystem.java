@@ -35,16 +35,19 @@ public interface EntitySystem {
     void process();
 
     /**
+     * Called when an entity is added to the world.
      * Should only be called by World.
      */
     void onEntityAdded(Entity entity);
 
     /**
+     * Called when an entity is removed from the world.
      * Should only be called by World.
      */
     void onEntityRemoved(Entity entity);
 
     /**
+     * Called when the components in an entity change.
      * Should only be called by World.
      */
     void onEntityComponentsChanged(Entity entity);

@@ -4,6 +4,7 @@ import org.entityflow.component.Component;
 import org.entityflow.world.World;
 import org.flowutils.Check;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,26 +27,8 @@ public final class ConcurrentEntity extends BaseEntity {
      */
     private final Object changeLock = new Object();
 
-    /**
-     * Creates a new entity and adds the specified components to it.
-     *
-     * @param entityId   unique id for the entity within the world.
-     * @param world      world that this entity exists in.
-     * @param components initial components to add.
-     */
-    public ConcurrentEntity(long entityId, World world, Component... components) {
-        super(entityId, world);
-
-        // Add components
-        for (Component component : components) {
-            addComponent(component);
-        }
-    }
-
-
-
-    @Override public void getComponents(Map<Class<? extends Component>, Component> componentsOut) {
-        componentsOut.putAll(components);
+    @Override public void getComponents(Collection<Component> componentsOut) {
+        componentsOut.addAll(components.values());
     }
 
     public Map<Class<? extends Component>, Component> getComponents() {
@@ -60,19 +43,14 @@ public final class ConcurrentEntity extends BaseEntity {
         Check.notNull(component, "component");
 
         synchronized (changeLock) {
-            // Add component
-            final Component oldValue = components.put(component.getBaseType(), component);
+            rawAddComponent(component);
+        }
+    }
 
-            // Ignore cases where we replace a component with itself
-            if (oldValue != component) {
-                // Notify previous component, if any
-                if (oldValue != null) oldValue.onRemoved();
-
-                // Notify new component
-                component.setEntity(this);
-
-                // Notify world
-                getWorld().onEntityComponentsChanged(this);
+    @Override public void addComponents(Component... components) {
+        synchronized (changeLock) {
+            for (Component component : components) {
+                rawAddComponent(component);
             }
         }
     }
@@ -106,7 +84,7 @@ public final class ConcurrentEntity extends BaseEntity {
         return true;
     }
 
-    @Override public void onRemoved() {
+    @Override public void onDeleted() {
         // Notify components
         for (Component component : components.values()) {
             component.onRemoved();
@@ -117,6 +95,22 @@ public final class ConcurrentEntity extends BaseEntity {
         // Cleanup entity
         components.clear();
 
-        super.onRemoved();
+        super.onDeleted();
+    }
+
+    private void rawAddComponent(Component component) {// Add component
+        final Component oldValue = components.put(component.getBaseType(), component);
+
+        // Ignore cases where we replace a component with itself
+        if (oldValue != component) {
+            // Notify previous component, if any
+            if (oldValue != null) oldValue.onRemoved();
+
+            // Notify new component
+            component.setEntity(this);
+
+            // Notify world
+            getWorld().onEntityComponentsChanged(this);
+        }
     }
 }

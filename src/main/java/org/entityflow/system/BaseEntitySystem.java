@@ -68,7 +68,7 @@ public abstract class BaseEntitySystem extends BaseSystem {
     @Override
     public final void onEntityRemoved(Entity entity) {
         if (handlesEntity(entity)) {
-            removeEntityIfWeShould(entity);
+            removeEntity(entity);
         }
     }
 
@@ -138,9 +138,13 @@ public abstract class BaseEntitySystem extends BaseSystem {
 
     private void removeEntityIfWeShould(Entity entity) {
         if (!shouldHandle(entity)) {
-            handleRemovedEntity(entity);
-            handledEntities.remove(entity);
+            removeEntity(entity);
         }
+    }
+
+    private void removeEntity(Entity entity) {
+        handleRemovedEntity(entity);
+        handledEntities.remove(entity);
     }
 
     private boolean handlesEntity(Entity entity) {

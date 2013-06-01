@@ -44,7 +44,7 @@ public interface World {
     void shutdown();
 
     /**
-     * Add and remove any recently added/removed entities, then call process for each EntitySystem, in the order they were added,
+     * Add and delete any recently added/removed entities, then call process for each EntitySystem, in the order they were added,
      * letting them process the entities they are interested in.
      * @param ticker contains time since last frame and since the beginning of the simulation.
      */
@@ -58,10 +58,10 @@ public interface World {
     Entity createEntity(Component... components);
 
     /**
-     * Removes an entity from the world.
-     * @param entity entity to remove if found.
+     * Removes an entity from the world, and recycles it.
+     * @param entity entity to delete if found.
      */
-    void removeEntity(Entity entity);
+    void deleteEntity(Entity entity);
 
     /**
      * @param entityId the id of the entity to get.
@@ -71,7 +71,7 @@ public interface World {
 
     /**
      * Notify the world when components are added or removed to an entity.  This is called automatically by an entity, no need to call manually.
-     * Will notify EntitySystems about the change, so that they can decide if they should add or remove the entity.
+     * Will notify EntitySystems about the change, so that they can decide if they should add or delete the entity.
      */
     void onEntityComponentsChanged(Entity entity);
 

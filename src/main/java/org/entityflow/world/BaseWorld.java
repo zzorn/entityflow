@@ -50,13 +50,14 @@ public abstract class BaseWorld implements World {
 
     @Override
     public final void start() {
+        running.set(true);
+
         // Initialize if needed
         if (!initialized.get()) init();
 
         // Main simulation loop
         // TODO: Better logic to timestepping?
         Ticker ticker = new Ticker();
-        running.set(true);
         while(running.get()) {
             ticker.tick();
 

@@ -12,7 +12,7 @@ import org.entityflow.world.World;
 public abstract class BaseProcessor implements Processor {
 
     protected final Class<? extends Processor> baseType;
-    protected double processingIntervalSeconds = 0;
+    protected double minProcessingIntervalSeconds = 0;
     protected final Ticker ticker = new Ticker();
 
     private World world = null;
@@ -25,27 +25,29 @@ public abstract class BaseProcessor implements Processor {
         this(baseType, 0);
     }
 
-    protected BaseProcessor(Class<? extends Processor> baseType, double processingIntervalSeconds) {
+    protected BaseProcessor(Class<? extends Processor> baseType, double minProcessingIntervalSeconds) {
         if (baseType == null) this.baseType = getClass();
         else this.baseType = baseType;
 
-        setProcessingIntervalSeconds(processingIntervalSeconds);
+        setMinProcessingIntervalSeconds(minProcessingIntervalSeconds);
     }
 
     /**
-     * @return an approximate interval in seconds between each time that the system is processed.
+     * @return an approximate minimum interval in seconds between each time that the system is processed.
      *                                  Zero if the system is processed every time process() is called.
+     *                                  Does at most one processing call each time World.process() is called.
      */
-    public final double getProcessingIntervalSeconds() {
-        return processingIntervalSeconds;
+    public final double getMinProcessingIntervalSeconds() {
+        return minProcessingIntervalSeconds;
     }
 
     /**
-     * @param processingIntervalSeconds an approximate interval in seconds between each time that the system is processed.
+     * @param minProcessingIntervalSeconds an approximate minimum interval in seconds between each time that the system is processed.
      *                                  Set to zero to process the system every time process() is called.
+     *                                  Does at most one processing call each time World.process() is called.
      */
-    public final void setProcessingIntervalSeconds(double processingIntervalSeconds) {
-        this.processingIntervalSeconds = processingIntervalSeconds;
+    public final void setMinProcessingIntervalSeconds(double minProcessingIntervalSeconds) {
+        this.minProcessingIntervalSeconds = minProcessingIntervalSeconds;
     }
 
     @Override
@@ -69,7 +71,7 @@ public abstract class BaseProcessor implements Processor {
 
     @Override
     public final void process() {
-        if (ticker.getSecondsSinceLastTick() >= processingIntervalSeconds) {
+        if (ticker.getSecondsSinceLastTick() >= minProcessingIntervalSeconds) {
             doProcess(ticker);
             ticker.tick();
         }

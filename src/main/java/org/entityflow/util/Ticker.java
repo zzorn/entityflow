@@ -1,10 +1,12 @@
 package org.entityflow.util;
 
-import java.lang.Math;import java.lang.System;
+import java.lang.Math;
+import java.lang.System;
 
 /**
  * Used for something that happens at certain intervals, to keep track of time since the last tick.
  */
+// TODO: Allow manual advance of time (create common superclass, and one manual advanced time and one that uses system time?)
 public class Ticker {
 
     private long millisecondsSinceStart = 0;

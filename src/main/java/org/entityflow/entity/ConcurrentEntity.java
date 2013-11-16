@@ -1,7 +1,6 @@
 package org.entityflow.entity;
 
 import org.entityflow.component.Component;
-import org.entityflow.world.World;
 import org.flowutils.Check;
 
 import java.util.Collection;
@@ -57,19 +56,7 @@ public final class ConcurrentEntity extends BaseEntity {
 
     @Override public <T extends Component> void removeComponent(final Class<T> type) {
         synchronized (changeLock) {
-            // Remove component
-            final Component oldComponent = components.remove(type);
-
-            // Check if some component was removed
-            if (oldComponent != null) {
-                // Notify removed component
-                oldComponent.onRemoved();
-
-                // Notify world
-                getWorld().onEntityComponentsChanged(this);
-
-                // TODO: Recycle component?
-            }
+            rawRemoveComponent(type);
         }
     }
 
@@ -87,9 +74,7 @@ public final class ConcurrentEntity extends BaseEntity {
     @Override public void onDeleted() {
         // Notify components
         for (Component component : components.values()) {
-            component.onRemoved();
-
-            // TODO: Recycle component?
+            handleComponentRemoved(component);
         }
 
         // Cleanup entity
@@ -98,13 +83,19 @@ public final class ConcurrentEntity extends BaseEntity {
         super.onDeleted();
     }
 
-    private void rawAddComponent(Component component) {// Add component
+    /**
+     * Only call this from a synchronized context.
+     */
+    private void rawAddComponent(Component component) {
+        // Add component
         final Component oldValue = components.put(component.getBaseType(), component);
 
         // Ignore cases where we replace a component with itself
         if (oldValue != component) {
             // Notify previous component, if any
-            if (oldValue != null) oldValue.onRemoved();
+            if (oldValue != null) {
+                handleComponentRemoved(oldValue);
+            }
 
             // Notify new component
             component.setEntity(this);
@@ -112,5 +103,29 @@ public final class ConcurrentEntity extends BaseEntity {
             // Notify world
             getWorld().onEntityComponentsChanged(this);
         }
+    }
+
+    /**
+     * Only call this from a synchronized context.
+     */
+    private <T extends Component> void rawRemoveComponent(Class<T> type) {
+        // Remove component
+        final Component oldComponent = components.remove(type);
+
+        // Check if some component was removed
+        if (oldComponent != null) {
+            // Notify removed component
+            handleComponentRemoved(oldComponent);
+
+            // Notify world
+            getWorld().onEntityComponentsChanged(this);
+        }
+    }
+
+    private void handleComponentRemoved(Component removedComponent) {
+        // Notify removed component
+        removedComponent.onRemoved();
+
+        // TODO: Recycle component?
     }
 }

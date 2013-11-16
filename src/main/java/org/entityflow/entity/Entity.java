@@ -8,7 +8,7 @@ import java.util.Set;
 
 /**
  * An entity that exists in a World.  An entity has zero or more components, which contain data for various aspects
- * of the entity.  Entities are processed by Systems in the World, the Systems provide functionality for entities.
+ * of the entity.  Entities are processed by Processors in the World, the Processors provide functionality for entities.
  */
 public interface Entity {
 

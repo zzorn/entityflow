@@ -115,6 +115,8 @@ public class ConcurrentWorld extends BaseWorld {
 
     @Override
     public void process(Ticker ticker) {
+        if (!initialized.get()) throw new IllegalStateException("World was not yet initialized, can not process world before init is called.");
+
         refreshEntities();
 
         // Process entities with systems

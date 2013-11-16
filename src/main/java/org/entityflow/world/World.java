@@ -11,7 +11,7 @@ import org.entityflow.entity.Entity;
 public interface World {
 
     /**
-     * Adds a processor.  Should be done before calling initialize.
+     * Adds a processor.  Should be done before calling init.
      */
     <T extends Processor> T addProcessor(T processor);
 
@@ -58,6 +58,9 @@ public interface World {
 
     /**
      * Creates a new entity and adds it to the world.
+     *
+     * Can be done both before and after init is called on the World.
+     *
      * @param components initial components to add to the entity.
      * @return the created entity.
      */
@@ -71,7 +74,7 @@ public interface World {
 
     /**
      * Notify the world when components are added or removed to an entity.  This is called automatically by an entity, no need to call manually.
-     * Will notify Processors about the change, so that they can decide if they should add or delete the entity.
+     * Will notify Processors about the change, so that they can decide if they should add or delete the entity from their lists of entities to process.
      */
     void onEntityComponentsChanged(Entity entity);
 

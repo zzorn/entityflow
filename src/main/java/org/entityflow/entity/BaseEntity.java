@@ -21,7 +21,7 @@ public abstract class BaseEntity implements Entity {
     private World world = null;
 
     @Override public final void init(long entityId, World world) {
-        if (entityId != 0) throw new IllegalStateException("Can not initialize an entity that was already initialized.  Attempted to initialize to entity id "+entityId+", but already had id "+ this.entityId);
+        if (this.entityId != 0) throw new IllegalStateException("Can not initialize an entity that was already initialized.  Attempted to initialize to entity id "+entityId+", but already had id "+ this.entityId);
 
         this.entityId = entityId;
         this.world = world;

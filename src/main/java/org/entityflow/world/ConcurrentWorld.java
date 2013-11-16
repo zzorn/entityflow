@@ -4,6 +4,8 @@ package org.entityflow.world;
 import org.apache.commons.pool.BasePoolableObjectFactory;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.SoftReferenceObjectPool;
+import org.entityflow.entity.Message;
+import org.entityflow.persistence.PersistenceService;
 import org.entityflow.system.Processor;
 import org.entityflow.util.Ticker;
 import org.entityflow.component.Component;
@@ -52,17 +54,28 @@ public class ConcurrentWorld extends BaseWorld {
         }
     });
 
+    // Count number of simulation ticks.
+    private AtomicLong simulationTick = new AtomicLong(0);
 
-    public ConcurrentWorld() {
-        this(1);
+    private final PersistenceService persistenceService;
+
+    public ConcurrentWorld(PersistenceService persistenceService) {
+        this(persistenceService, 1);
     }
 
-    public ConcurrentWorld(long simulationStepMilliseconds) {
+    public ConcurrentWorld(PersistenceService persistenceService, long simulationStepMilliseconds) {
+        Check.notNull(persistenceService, "persistenceService");
+
+        this.persistenceService = persistenceService;
         setSimulationStepMilliseconds(simulationStepMilliseconds);
     }
 
     public long getSimulationStepMilliseconds() {
         return simulationStepMilliseconds;
+    }
+
+    public PersistenceService getPersistenceService() {
+        return persistenceService;
     }
 
     @Override
@@ -112,10 +125,15 @@ public class ConcurrentWorld extends BaseWorld {
         changedEntities.put(entity, true);
     }
 
+    @Override public long getSimulationTick() {
+        return simulationTick.get();
+    }
+
 
     @Override
     public void process(Ticker ticker) {
         if (!initialized.get()) throw new IllegalStateException("World was not yet initialized, can not process world before init is called.");
+        Check.notNull(ticker, "ticker");
 
         refreshEntities();
 
@@ -124,6 +142,8 @@ public class ConcurrentWorld extends BaseWorld {
             processor.process();
         }
 
+        // Count tick
+        simulationTick.incrementAndGet();
     }
 
     @Override
@@ -147,6 +167,24 @@ public class ConcurrentWorld extends BaseWorld {
         return entity;
     }
 
+    @Override public void sendMessage(long entityId, Message message, boolean externalSource) {
+        // Find the entity to message
+        final Entity entity = getEntity(entityId);
+        if (entity == null) throw new IllegalArgumentException("No entity with id '"+entityId+"' found when trying to send message '"+message+"'");
+
+        sendMessage(entity, message, externalSource);
+    }
+
+    @Override public void sendMessage(Entity entity, Message message, boolean externalSource) {
+        // Ensure the entity is in this world, and is initialized.
+        Check.notNull(entity, "entity");
+        if (entity.getWorld() != this) throw new IllegalArgumentException("Can not send a message to an entity that is not in this world or not initialized.  " +
+                                                                          "The target entity is in the world '"+entity.getWorld()+"', but this is world '"+this+"'.  " +
+                                                                          "The message was '"+message+"'");
+
+        // Queue message with the entity
+        entity.sendMessage(message, externalSource);
+    }
 
     @Override protected void doShutdown() {
         if (initialized.get()) {

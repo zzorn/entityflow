@@ -1,5 +1,7 @@
 package org.entityflow.world;
 
+import org.entityflow.entity.Message;
+import org.entityflow.persistence.PersistenceService;
 import org.entityflow.system.Processor;
 import org.entityflow.util.Ticker;
 import org.entityflow.component.Component;
@@ -73,9 +75,43 @@ public interface World {
     void deleteEntity(Entity entity);
 
     /**
+     * Sends a message to the specified entity.
+     * The message will be handled by any suitable MessageProcessor next time process() is called.
+     * The message may also be serialized to disk if it is from an external source, to allow recovery in case of a crash.
+     *
+     * @param entity entity to send message to
+     * @param message message to send
+     * @param externalSource true if the message originates from outside the world simulation, e.g. from a player client.
+     *                       false if the message originates from inside the world, e.g. a Processor.
+     */
+    void sendMessage(Entity entity, Message message, boolean externalSource);
+
+    /**
+     * Sends a message to the specified entity.
+     * The message will be handled by any suitable MessageProcessor next time process() is called.
+     * The message may also be serialized to disk if it is from an external source, to allow recovery in case of a crash.
+     *
+     * @param entityId entity to send message to
+     * @param message message to send
+     * @param externalSource true if the message originates from outside the world simulation, e.g. from a player client.
+     *                       false if the message originates from inside the world, e.g. a Processor.
+     */
+    void sendMessage(long entityId, Message message, boolean externalSource);
+
+    /**
      * Notify the world when components are added or removed to an entity.  This is called automatically by an entity, no need to call manually.
      * Will notify Processors about the change, so that they can decide if they should add or delete the entity from their lists of entities to process.
      */
     void onEntityComponentsChanged(Entity entity);
 
+    /**
+     * @return number of simulation passes that have been handled by the world so far.
+     *         Starts at zero and is increased each time process is called.
+     */
+    long getSimulationTick();
+
+    /**
+     * @return the persistence service used by the World.
+     */
+    PersistenceService getPersistenceService();
 }

@@ -4,6 +4,7 @@ import org.entityflow.component.Component;
 import org.entityflow.world.World;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -78,4 +79,18 @@ public interface Entity {
      */
     void onDeleted();
 
+    /**
+     * Sends the specified message to this entity.
+     * A suitable processor will handle it during the next update pass.
+     *
+     * @param message the message to handle.
+     * @param externalSource true if the message originated from an external source such as a player client.
+     *                       false if it is from a system inside the simulation, such as a Processor.
+     */
+    void sendMessage(Message message, boolean externalSource);
+
+    /**
+     * @return next message to be read, or null if no more messages to read currently.
+     */
+    Message popNextMessage();
 }

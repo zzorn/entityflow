@@ -1,14 +1,16 @@
 package org.entityflow;
 
 import org.entityflow.component.BaseComponent;
-import org.entityflow.component.Component;
 import org.entityflow.entity.Entity;
+import org.entityflow.entity.Message;
+import org.entityflow.persistence.PersistenceService;
 import org.entityflow.system.BaseEntityProcessor;
-import org.entityflow.system.Processor;
 import org.entityflow.util.Ticker;
-import org.entityflow.world.BaseWorld;
 import org.entityflow.world.ConcurrentWorld;
-import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
@@ -21,7 +23,7 @@ public class TestEntitySystem {
     @org.junit.Test
     public void testSystem() throws Exception {
         // Create world
-        ConcurrentWorld world = new ConcurrentWorld();
+        ConcurrentWorld world = new ConcurrentWorld(new TestPersistence());
 
         // Add a processor
         final TestProcessor testProcessor = new TestProcessor();
@@ -78,6 +80,44 @@ public class TestEntitySystem {
 
     }
 
+
+    @Test
+    public void testMessaging() throws Exception {
+        final Ticker ticker = new Ticker();
+
+        // Create world
+        final TestPersistence persistence = new TestPersistence();
+        ConcurrentWorld world = new ConcurrentWorld(persistence);
+
+        // Add an entity
+        final TestComponent testComponent = new TestComponent();
+        final Entity entity = world.createEntity(testComponent);
+
+        // Initialize world
+        world.init();
+
+        entity.sendMessage(new TestMessage("msg1int"), false);
+        entity.sendMessage(new TestMessage("msg2ext"), true);
+
+        world.sendMessage(entity, new TestMessage("msg3ext"), true);
+        world.sendMessage(entity, new TestMessage("msg4int"), false);
+
+        world.sendMessage(entity.getEntityId(), new TestMessage("msg5int"), false);
+        world.sendMessage(entity.getEntityId(), new TestMessage("msg6ext"), true);
+
+        world.process(ticker);
+
+        world.sendMessage(entity, new TestMessage("msg7ext"), true);
+
+        world.process(ticker);
+
+        world.sendMessage(entity, new TestMessage("msg8ext"), true);
+
+        assertArrayEquals(new String[]{"msg2ext", "msg3ext", "msg6ext", "msg7ext", "msg8ext"}, persistence.messages.toArray());
+        assertArrayEquals(new Long[]{1L, 1L, 1L, 1L, 1L}, persistence.entityIds.toArray());
+        assertArrayEquals(new Long[]{0L, 0L, 0L, 1L, 2L}, persistence.ticks.toArray());
+    }
+
     private class TestComponent extends BaseComponent {
         public int counter = 0;
     }
@@ -90,6 +130,26 @@ public class TestEntitySystem {
         @Override protected void processEntity(Ticker ticker, Entity entity) {
             final TestComponent testComponent = entity.getComponent(TestComponent.class);
             testComponent.counter++;
+        }
+    }
+
+    private class TestPersistence implements PersistenceService {
+        public List<String> messages = new ArrayList<String>();
+        public List<Long> ticks= new ArrayList<Long>();
+        public List<Long> entityIds= new ArrayList<Long>();
+
+        @Override public void storeExternalMessage(long simulationTick, long recipientEntity, Message message) {
+            ticks.add(simulationTick);
+            entityIds.add(recipientEntity);
+            messages.add(((TestMessage)message).content);
+        }
+    }
+
+    private class TestMessage implements Message {
+        public final String content;
+
+        private TestMessage(String content) {
+            this.content = content;
         }
     }
 

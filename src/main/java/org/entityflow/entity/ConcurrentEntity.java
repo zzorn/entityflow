@@ -1,12 +1,14 @@
 package org.entityflow.entity;
 
 import org.entityflow.component.Component;
+import org.entityflow.world.World;
 import org.flowutils.Check;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -24,7 +26,14 @@ public final class ConcurrentEntity extends BaseEntity {
     /**
      * Lock used to synchronize component changes with.
      */
-    private final Object changeLock = new Object();
+    private final Object componentChangeLock = new Object();
+
+    /**
+     * Lock used to synchronize message queuing with.
+     */
+    private final Object messageLock = new Object();
+
+    private final ConcurrentLinkedQueue<Message> messageQueue = new ConcurrentLinkedQueue<Message>();
 
     @Override public void getComponents(Collection<Component> componentsOut) {
         componentsOut.addAll(components.values());
@@ -41,13 +50,13 @@ public final class ConcurrentEntity extends BaseEntity {
     @Override public void addComponent(Component component) {
         Check.notNull(component, "component");
 
-        synchronized (changeLock) {
+        synchronized (componentChangeLock) {
             rawAddComponent(component);
         }
     }
 
     @Override public void addComponents(Component... components) {
-        synchronized (changeLock) {
+        synchronized (componentChangeLock) {
             for (Component component : components) {
                 rawAddComponent(component);
             }
@@ -55,7 +64,7 @@ public final class ConcurrentEntity extends BaseEntity {
     }
 
     @Override public <T extends Component> void removeComponent(final Class<T> type) {
-        synchronized (changeLock) {
+        synchronized (componentChangeLock) {
             rawRemoveComponent(type);
         }
     }
@@ -81,6 +90,32 @@ public final class ConcurrentEntity extends BaseEntity {
         components.clear();
 
         super.onDeleted();
+    }
+
+    @Override public void sendMessage(Message message, boolean externalSource) {
+        Check.notNull(message, "message");
+
+        // For external message sources (e.g. player clients), we also persistently store the message,
+        // to allow unrolling in the event of a crash.
+        if (externalSource) {
+            // Make sure multiple calls will have the messages added in the same order to the messageQueue and the persistence service.
+            synchronized (messageLock) {
+                // Queue the message for handling by processors during simulation update.
+                messageQueue.add(message);
+
+                // Store message persistently if it is from outside the simulation, to allow rollback recovery
+                final World world = getWorld();
+                world.getPersistenceService().storeExternalMessage(world.getSimulationTick(), getEntityId(), message);
+            }
+        }
+        else {
+            //Just queue the message for handling by processors during simulation update.
+            messageQueue.add(message);
+        }
+    }
+
+    @Override public Message popNextMessage() {
+        return messageQueue.remove();
     }
 
     /**

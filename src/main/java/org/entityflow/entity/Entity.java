@@ -81,7 +81,7 @@ public interface Entity {
 
     /**
      * Sends the specified message to this entity.
-     * A suitable processor will handle it during the next update pass.
+     * A suitable message handler will handle it during the next update pass.
      *
      * @param message the message to handle.
      * @param externalSource true if the message originated from an external source such as a player client.
@@ -89,8 +89,4 @@ public interface Entity {
      */
     void sendMessage(Message message, boolean externalSource);
 
-    /**
-     * @return next message to be read, or null if no more messages to read currently.
-     */
-    Message popNextMessage();
 }

@@ -6,4 +6,6 @@ package org.entityflow.entity;
  * Should be possible to serialize.
  */
 public interface Message {
+
+
 }

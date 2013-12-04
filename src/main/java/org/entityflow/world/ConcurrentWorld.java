@@ -4,8 +4,10 @@ package org.entityflow.world;
 import org.apache.commons.pool.BasePoolableObjectFactory;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.SoftReferenceObjectPool;
+import org.entityflow.entity.AddressedMessage;
 import org.entityflow.entity.Message;
 import org.entityflow.persistence.PersistenceService;
+import org.entityflow.system.MessageHandler;
 import org.entityflow.system.Processor;
 import org.entityflow.util.Ticker;
 import org.entityflow.component.Component;
@@ -18,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -35,8 +38,11 @@ public class ConcurrentWorld extends BaseWorld {
     // Lookup map for entities based on entity id
     private final ConcurrentMap<Long, Entity> entityLookup = new ConcurrentHashMap<Long, Entity>();
 
-    // Lookup map for systems based on class
+    // Lookup map for processors based on class
     private final Map<Class, Processor> processorLookup = new HashMap<Class, Processor>();
+
+    // Lookup map for message handlers
+    private final Map<Class, MessageHandler> messageHandlerLookup = new HashMap<Class, MessageHandler>();
 
     // Added and removed entities are first stored in concurrent collections, and then applied to the world at the start of world processing.
     private final ConcurrentMap<Entity, Boolean> addedAndRemovedEntities = new ConcurrentHashMap<Entity, Boolean>();
@@ -54,10 +60,26 @@ public class ConcurrentWorld extends BaseWorld {
         }
     });
 
+    // Pool for messages
+    private final ObjectPool<AddressedMessage> messagePool = new SoftReferenceObjectPool<AddressedMessage>(new BasePoolableObjectFactory<AddressedMessage>() {
+        @Override public AddressedMessage makeObject() throws Exception {
+            return new AddressedMessage();
+        }
+
+        @Override public void passivateObject(AddressedMessage obj) throws Exception {
+            obj.clear();
+        }
+    });
+
     // Count number of simulation ticks.
     private AtomicLong simulationTick = new AtomicLong(0);
 
+    // Holds received but unhandled messages.
+    private final ConcurrentLinkedQueue<AddressedMessage> messageQueue = new ConcurrentLinkedQueue<AddressedMessage>();
+
+    // Persistence
     private final PersistenceService persistenceService;
+
 
     public ConcurrentWorld(PersistenceService persistenceService) {
         this(persistenceService, 1);
@@ -101,6 +123,16 @@ public class ConcurrentWorld extends BaseWorld {
         return (T) processor;
     }
 
+    @Override
+    public <T extends Message> MessageHandler<T> addMessageHandler(Class<T> handledMessage,
+                                                                   MessageHandler<T> messageHandler) {
+        Check.notNull(messageHandler, "messageHandler");
+
+        messageHandlerLookup.put(handledMessage, messageHandler);
+
+        return messageHandler;
+    }
+
     @Override protected void initProcessors() {
         for (Processor processor : processors) {
             processor.init(this);
@@ -137,6 +169,13 @@ public class ConcurrentWorld extends BaseWorld {
 
         refreshEntities();
 
+        // Process messages
+        AddressedMessage message = messageQueue.poll();
+        while (message != null) {
+            processMessage(message);
+            message = messageQueue.poll();
+        }
+
         // Process entities with systems
         for (Processor processor : processors) {
             processor.process();
@@ -144,6 +183,38 @@ public class ConcurrentWorld extends BaseWorld {
 
         // Count tick
         simulationTick.incrementAndGet();
+    }
+
+    private void processMessage(AddressedMessage addressedMessage) {
+        // Get wrapped message
+        final Message message = addressedMessage.getMessage();
+        Check.notNull(message, "addressedMessage.getMessage()");
+
+        // Get handler for message type
+        final MessageHandler messageHandler = messageHandlerLookup.get(message.getClass());
+        if (messageHandler != null) {
+            // Get entity to apply message to
+            final Entity entity = getEntity(addressedMessage.getEntityId());
+            if (entity != null) {
+                // Handle the message
+                messageHandler.handleMessage(entity, message);
+            }
+            else {
+                // Entity not found - TODO: log warning
+                System.out.println("No entity found for message " + addressedMessage + ", discarding message");
+            }
+        }
+        else {
+            // No message handler found - TODO: log warning
+            System.out.println("No message handler found for message " + addressedMessage + ", discarding message");
+        }
+
+        // Release message container
+        try {
+            messagePool.returnObject(addressedMessage);
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not release AddressedMessge object: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -167,14 +238,6 @@ public class ConcurrentWorld extends BaseWorld {
         return entity;
     }
 
-    @Override public void sendMessage(long entityId, Message message, boolean externalSource) {
-        // Find the entity to message
-        final Entity entity = getEntity(entityId);
-        if (entity == null) throw new IllegalArgumentException("No entity with id '"+entityId+"' found when trying to send message '"+message+"'");
-
-        sendMessage(entity, message, externalSource);
-    }
-
     @Override public void sendMessage(Entity entity, Message message, boolean externalSource) {
         // Ensure the entity is in this world, and is initialized.
         Check.notNull(entity, "entity");
@@ -182,8 +245,29 @@ public class ConcurrentWorld extends BaseWorld {
                                                                           "The target entity is in the world '"+entity.getWorld()+"', but this is world '"+this+"'.  " +
                                                                           "The message was '"+message+"'");
 
-        // Queue message with the entity
-        entity.sendMessage(message, externalSource);
+        sendMessage(entity.getEntityId(), message, externalSource);
+    }
+
+    @Override public void sendMessage(long entityId, Message message, boolean externalSource) {
+        Check.notNull(message, "message");
+        Check.positive(entityId, "entityId");
+
+        // Get addressed message object
+        final AddressedMessage addressedMessage;
+        try {
+            addressedMessage = messagePool.borrowObject();
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not create AddressedMessage object to hold the message: "+ e.getMessage(), e);
+        }
+
+        // Fill it in
+        addressedMessage.set(message, entityId, externalSource);
+
+        // Store message persistently if it is from outside the simulation, to allow rollback recovery
+        if (externalSource) getPersistenceService().storeExternalMessage(getSimulationTick(), entityId, message);
+
+        // Queue it
+        messageQueue.add(addressedMessage);
     }
 
     @Override protected void doShutdown() {

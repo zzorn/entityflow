@@ -2,6 +2,7 @@ package org.entityflow.world;
 
 import org.entityflow.entity.Message;
 import org.entityflow.persistence.PersistenceService;
+import org.entityflow.system.MessageHandler;
 import org.entityflow.system.Processor;
 import org.entityflow.util.Ticker;
 import org.entityflow.component.Component;
@@ -21,6 +22,14 @@ public interface World {
      * @return the processor of the specified type.  Throws an exception if not found.
      */
     <T extends Processor> T getProcessor(Class<T> processorType);
+
+    /**
+     * Add a handler for the specified type of message.
+     * @param handledMessage the exact type of messages that will be handled by this handler.  Subtypes of this message type will not be handled.
+     * @param messageHandler the handler for the messages.
+     * @return the messageHandler
+     */
+    <T extends Message> MessageHandler<T> addMessageHandler(Class<T> handledMessage, MessageHandler<T> messageHandler);
 
     /**
      * Initializes all processors.
@@ -114,4 +123,5 @@ public interface World {
      * @return the persistence service used by the World.
      */
     PersistenceService getPersistenceService();
+
 }

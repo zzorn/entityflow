@@ -5,6 +5,7 @@ import org.entityflow.entity.Entity;
 import org.entityflow.entity.Message;
 import org.entityflow.persistence.PersistenceService;
 import org.entityflow.system.BaseEntityProcessor;
+import org.entityflow.system.MessageHandler;
 import org.entityflow.util.Ticker;
 import org.entityflow.world.ConcurrentWorld;
 import org.junit.Test;
@@ -89,6 +90,15 @@ public class TestEntitySystem {
         final TestPersistence persistence = new TestPersistence();
         ConcurrentWorld world = new ConcurrentWorld(persistence);
 
+        // Add message handler
+        final List<String> receivedMessages = new ArrayList<String>();
+        world.addMessageHandler(TestMessage.class, new MessageHandler<TestMessage>() {
+            @Override public boolean handleMessage(Entity entity, TestMessage message) {
+                receivedMessages.add(message.content);
+                return true;
+            }
+        });
+
         // Add an entity
         final TestComponent testComponent = new TestComponent();
         final Entity entity = world.createEntity(testComponent);
@@ -105,17 +115,27 @@ public class TestEntitySystem {
         world.sendMessage(entity.getEntityId(), new TestMessage("msg5int"), false);
         world.sendMessage(entity.getEntityId(), new TestMessage("msg6ext"), true);
 
+        assertArrayEquals(new String[]{}, receivedMessages.toArray());
+
         world.process(ticker);
 
         world.sendMessage(entity, new TestMessage("msg7ext"), true);
 
+        assertArrayEquals(new String[]{"msg1int", "msg2ext", "msg3ext", "msg4int", "msg5int", "msg6ext"}, receivedMessages.toArray());
+
         world.process(ticker);
+
+        assertArrayEquals(new String[]{"msg1int", "msg2ext", "msg3ext", "msg4int", "msg5int", "msg6ext", "msg7ext"}, receivedMessages.toArray());
 
         world.sendMessage(entity, new TestMessage("msg8ext"), true);
 
         assertArrayEquals(new String[]{"msg2ext", "msg3ext", "msg6ext", "msg7ext", "msg8ext"}, persistence.messages.toArray());
         assertArrayEquals(new Long[]{1L, 1L, 1L, 1L, 1L}, persistence.entityIds.toArray());
         assertArrayEquals(new Long[]{0L, 0L, 0L, 1L, 2L}, persistence.ticks.toArray());
+
+        world.process(ticker);
+
+        assertArrayEquals(new String[]{"msg1int", "msg2ext", "msg3ext", "msg4int", "msg5int", "msg6ext", "msg7ext", "msg8ext"}, receivedMessages.toArray());
     }
 
     private class TestComponent extends BaseComponent {

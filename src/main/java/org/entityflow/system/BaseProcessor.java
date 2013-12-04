@@ -71,6 +71,7 @@ public abstract class BaseProcessor implements Processor {
 
     @Override
     public final void process() {
+        // Do normal processing
         if (ticker.getSecondsSinceLastTick() >= minProcessingIntervalSeconds) {
             doProcess(ticker);
             ticker.tick();

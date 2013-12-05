@@ -4,7 +4,7 @@ import org.entityflow.entity.Entity;
 import org.entityflow.entity.Message;
 
 /**
- *
+ * Handles some type of message.
  */
 public interface MessageHandler<T extends Message> {
 

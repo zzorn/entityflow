@@ -25,11 +25,11 @@ public interface World {
 
     /**
      * Add a handler for the specified type of message.
-     * @param handledMessage the exact type of messages that will be handled by this handler.  Subtypes of this message type will not be handled.
+     * @param handledMessageType the exact type of messages that will be handled by this handler.  Subtypes of this message type will not be handled.
      * @param messageHandler the handler for the messages.
      * @return the messageHandler
      */
-    <T extends Message> MessageHandler<T> addMessageHandler(Class<T> handledMessage, MessageHandler<T> messageHandler);
+    <T extends Message> MessageHandler<T> addMessageHandler(Class<T> handledMessageType, MessageHandler<T> messageHandler);
 
     /**
      * Initializes all processors.

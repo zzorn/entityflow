@@ -124,11 +124,11 @@ public class ConcurrentWorld extends BaseWorld {
     }
 
     @Override
-    public <T extends Message> MessageHandler<T> addMessageHandler(Class<T> handledMessage,
+    public <T extends Message> MessageHandler<T> addMessageHandler(Class<T> handledMessageType,
                                                                    MessageHandler<T> messageHandler) {
         Check.notNull(messageHandler, "messageHandler");
 
-        messageHandlerLookup.put(handledMessage, messageHandler);
+        messageHandlerLookup.put(handledMessageType, messageHandler);
 
         return messageHandler;
     }

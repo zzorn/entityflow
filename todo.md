@@ -7,7 +7,7 @@ TODO List
 Timestepping
 * Better timestep handling options
 * Support for manual timestepping
-* Timestep ticker might be moved to utils lib
+* Timestep time might be moved to utils lib
 * Processor with a fixed timestep, run it many times if it is left behind?  Would be ideal to run all processors and not just one though.
 
 

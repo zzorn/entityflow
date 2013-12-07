@@ -1,7 +1,8 @@
 package org.entityflow.world;
 
-import org.entityflow.util.Ticker;
 import org.flowutils.Check;
+import org.flowutils.time.RealTime;
+import org.flowutils.time.Time;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -13,7 +14,15 @@ public abstract class BaseWorld implements World {
 
     protected final AtomicBoolean initialized = new AtomicBoolean(false);
     protected final AtomicBoolean running = new AtomicBoolean(false);
+
+    // Handles game time
+    private final Time time;
+
     protected long simulationStepMilliseconds;
+
+    protected BaseWorld(Time time) {
+        this.time = time;
+    }
 
     @Override
     public final void init() {
@@ -56,12 +65,11 @@ public abstract class BaseWorld implements World {
         if (!initialized.get()) init();
 
         // Main simulation loop
-        // TODO: Better logic to timestepping?
-        Ticker ticker = new Ticker();
+        // TODO: Better logic to timestepping
         while(running.get()) {
-            ticker.tick();
+            time.nextStep();
 
-            process(ticker);
+            process();
 
             try {
                 Thread.sleep(simulationStepMilliseconds);
@@ -83,6 +91,10 @@ public abstract class BaseWorld implements World {
         else {
             doShutdown();
         }
+    }
+
+    public final Time getTime() {
+        return time;
     }
 
     /**

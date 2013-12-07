@@ -9,11 +9,11 @@ import org.entityflow.entity.Message;
 import org.entityflow.persistence.PersistenceService;
 import org.entityflow.system.MessageHandler;
 import org.entityflow.system.Processor;
-import org.entityflow.util.Ticker;
 import org.entityflow.component.Component;
 import org.entityflow.entity.ConcurrentEntity;
 import org.entityflow.entity.Entity;
 import org.flowutils.Check;
+import org.flowutils.time.Time;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,12 +81,16 @@ public class ConcurrentWorld extends BaseWorld {
     private final PersistenceService persistenceService;
 
 
-    public ConcurrentWorld(PersistenceService persistenceService) {
-        this(persistenceService, 1);
+
+    public ConcurrentWorld(PersistenceService persistenceService, Time time) {
+        this(persistenceService, time, 1);
     }
 
-    public ConcurrentWorld(PersistenceService persistenceService, long simulationStepMilliseconds) {
+    public ConcurrentWorld(PersistenceService persistenceService, Time time, long simulationStepMilliseconds) {
+        super(time);
+
         Check.notNull(persistenceService, "persistenceService");
+        Check.notNull(time, "time");
 
         this.persistenceService = persistenceService;
         setSimulationStepMilliseconds(simulationStepMilliseconds);
@@ -163,9 +167,8 @@ public class ConcurrentWorld extends BaseWorld {
 
 
     @Override
-    public void process(Ticker ticker) {
+    public void process() {
         if (!initialized.get()) throw new IllegalStateException("World was not yet initialized, can not process world before init is called.");
-        Check.notNull(ticker, "ticker");
 
         refreshEntities();
 
@@ -178,7 +181,7 @@ public class ConcurrentWorld extends BaseWorld {
 
         // Process entities with systems
         for (Processor processor : processors) {
-            processor.process();
+            processor.process(getTime());
         }
 
         // Count tick

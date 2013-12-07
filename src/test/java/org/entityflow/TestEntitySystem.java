@@ -6,8 +6,9 @@ import org.entityflow.entity.Message;
 import org.entityflow.persistence.PersistenceService;
 import org.entityflow.system.BaseEntityProcessor;
 import org.entityflow.system.MessageHandler;
-import org.entityflow.util.Ticker;
 import org.entityflow.world.ConcurrentWorld;
+import org.flowutils.time.ManualTime;
+import org.flowutils.time.Time;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -24,7 +25,8 @@ public class TestEntitySystem {
     @org.junit.Test
     public void testSystem() throws Exception {
         // Create world
-        ConcurrentWorld world = new ConcurrentWorld(new TestPersistence());
+        final ManualTime worldTime = new ManualTime();
+        ConcurrentWorld world = new ConcurrentWorld(new TestPersistence(), worldTime);
 
         // Add a processor
         final TestProcessor testProcessor = new TestProcessor();
@@ -52,10 +54,9 @@ public class TestEntitySystem {
         final TestComponent testComponent2 = entity.getComponent(TestComponent.class);
         assertEquals("No tick should have been logged", 0, testComponent2.counter);
 
-        final Ticker ticker = new Ticker(); // TODO: Ticker with manually advanceable time.
-        ticker.tick();
-        Thread.sleep(2500);
-        world.process(ticker);
+        worldTime.advanceTime(2500);
+        worldTime.nextStep();
+        world.process();
 
         final TestComponent testComponent3 = entity.getComponent(TestComponent.class);
         assertEquals("One tick should have been logged", 1, testComponent3.counter);
@@ -64,9 +65,11 @@ public class TestEntitySystem {
         final long id = entity.getEntityId();
         assertEquals(entity, world.getEntity(id));
         world.deleteEntity(entity);
-        ticker.tick();
-        Thread.sleep(2500);
-        world.process(ticker);
+
+        worldTime.advanceTime(2500);
+        worldTime.nextStep();
+        world.process();
+
         assertEquals(null, world.getEntity(id));
         assertEquals(1, testComponent.counter);
 
@@ -84,11 +87,11 @@ public class TestEntitySystem {
 
     @Test
     public void testMessaging() throws Exception {
-        final Ticker ticker = new Ticker();
 
         // Create world
         final TestPersistence persistence = new TestPersistence();
-        ConcurrentWorld world = new ConcurrentWorld(persistence);
+        final ManualTime time = new ManualTime();
+        ConcurrentWorld world = new ConcurrentWorld(persistence, time);
 
         // Add message handler
         final List<String> receivedMessages = new ArrayList<String>();
@@ -117,15 +120,17 @@ public class TestEntitySystem {
 
         assertArrayEquals(new String[]{}, receivedMessages.toArray());
 
-        world.process(ticker);
+        world.process();
 
         world.sendMessage(entity, new TestMessage("msg7ext"), true);
 
-        assertArrayEquals(new String[]{"msg1int", "msg2ext", "msg3ext", "msg4int", "msg5int", "msg6ext"}, receivedMessages.toArray());
+        assertArrayEquals(new String[]{"msg1int", "msg2ext", "msg3ext", "msg4int", "msg5int", "msg6ext"},
+                          receivedMessages.toArray());
 
-        world.process(ticker);
+        world.process();
 
-        assertArrayEquals(new String[]{"msg1int", "msg2ext", "msg3ext", "msg4int", "msg5int", "msg6ext", "msg7ext"}, receivedMessages.toArray());
+        assertArrayEquals(new String[]{"msg1int", "msg2ext", "msg3ext", "msg4int", "msg5int", "msg6ext", "msg7ext"},
+                          receivedMessages.toArray());
 
         world.sendMessage(entity, new TestMessage("msg8ext"), true);
 
@@ -133,7 +138,7 @@ public class TestEntitySystem {
         assertArrayEquals(new Long[]{1L, 1L, 1L, 1L, 1L}, persistence.entityIds.toArray());
         assertArrayEquals(new Long[]{0L, 0L, 0L, 1L, 2L}, persistence.ticks.toArray());
 
-        world.process(ticker);
+        world.process();
 
         assertArrayEquals(new String[]{"msg1int", "msg2ext", "msg3ext", "msg4int", "msg5int", "msg6ext", "msg7ext", "msg8ext"}, receivedMessages.toArray());
     }
@@ -147,7 +152,7 @@ public class TestEntitySystem {
             super(null, 1, TestComponent.class);
         }
 
-        @Override protected void processEntity(Ticker ticker, Entity entity) {
+        @Override protected void processEntity(Time time, Entity entity) {
             final TestComponent testComponent = entity.getComponent(TestComponent.class);
             testComponent.counter++;
         }

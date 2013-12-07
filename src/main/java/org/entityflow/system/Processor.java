@@ -2,6 +2,7 @@ package org.entityflow.system;
 
 import org.entityflow.entity.Entity;
 import org.entityflow.world.World;
+import org.flowutils.time.Time;
 
 /**
  * A system that is specialized at simulating some aspect of the World.  Processes entities that contain some
@@ -30,8 +31,10 @@ public interface Processor {
     /**
      * Processes all entities registered with this system.
      * Should only be called by World.
+     *
+     * @param time contains information on time passed since the last call to process.
      */
-    void process();
+    void process(Time time);
 
     /**
      * Called when an entity is added to the world.

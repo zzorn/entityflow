@@ -4,9 +4,9 @@ import org.entityflow.entity.Message;
 import org.entityflow.persistence.PersistenceService;
 import org.entityflow.system.MessageHandler;
 import org.entityflow.system.Processor;
-import org.entityflow.util.Ticker;
 import org.entityflow.component.Component;
 import org.entityflow.entity.Entity;
+import org.flowutils.time.Time;
 
 /**
  * Manages all entities and systems in a game/simulation.
@@ -57,9 +57,8 @@ public interface World {
     /**
      * Add and delete any recently added/removed entities, then call process for each Processor, in the order they were added,
      * letting them process the entities they are interested in.
-     * @param ticker contains time since last frame and since the beginning of the simulation.
      */
-    void process(Ticker ticker);
+    void process();
 
     /**
      * @param entityId the id of the entity to get.

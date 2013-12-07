@@ -2,7 +2,7 @@ package org.entityflow.system;
 
 import org.entityflow.component.Component;
 import org.entityflow.entity.Entity;
-import org.entityflow.util.Ticker;
+import org.flowutils.time.Time;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -85,34 +85,34 @@ public abstract class BaseEntityProcessor extends BaseProcessor {
 
     }
 
-    protected void doProcess(Ticker systemTicker) {
-        preProcess(systemTicker);
+    protected void doProcess(Time systemTime) {
+        preProcess(systemTime);
 
         for (Entity handledEntity : handledEntities) {
-            processEntity(ticker, handledEntity);
+            processEntity(time, handledEntity);
         }
 
-        postProcess(systemTicker);
+        postProcess(systemTime);
     }
 
     /**
      * Called before entity processing begins.
-     * @param ticker contains delta time and total simulation time.
+     * @param time contains delta time and total simulation time.
      */
-    protected void preProcess(Ticker ticker) {}
+    protected void preProcess(Time time) {}
 
     /**
      * Called after entity processing ends.
-     * @param ticker contains delta time and total simulation time.
+     * @param time contains delta time and total simulation time.
      */
-    protected void postProcess(Ticker ticker) {}
+    protected void postProcess(Time time) {}
 
     /**
      * Called to process a specific entity
-     * @param ticker contains delta time and total simulation time.
+     * @param time contains delta time and total simulation time.
      * @param entity entity to process.
      */
-    protected void processEntity(Ticker ticker, Entity entity) {}
+    protected void processEntity(Time time, Entity entity) {}
 
     /**
      * Called after an entity is added to this system.

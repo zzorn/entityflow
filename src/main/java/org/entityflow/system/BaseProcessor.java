@@ -2,8 +2,9 @@ package org.entityflow.system;
 
 
 import org.entityflow.entity.Entity;
-import org.entityflow.util.Ticker;
 import org.entityflow.world.World;
+import org.flowutils.time.ManualTime;
+import org.flowutils.time.Time;
 
 /**
  * Base class for processor implementations, does not do any entity management.
@@ -13,7 +14,7 @@ public abstract class BaseProcessor implements Processor {
 
     protected final Class<? extends Processor> baseType;
     protected double minProcessingIntervalSeconds = 0;
-    protected final Ticker ticker = new Ticker();
+    protected final ManualTime time = new ManualTime();
 
     private World world = null;
 
@@ -58,7 +59,7 @@ public abstract class BaseProcessor implements Processor {
     @Override
     public final void init(World world) {
         this.world = world;
-        ticker.reset();
+        time.reset();
         onInit();
     }
 
@@ -70,20 +71,23 @@ public abstract class BaseProcessor implements Processor {
     }
 
     @Override
-    public final void process() {
-        // Do normal processing
-        if (ticker.getSecondsSinceLastTick() >= minProcessingIntervalSeconds) {
-            doProcess(ticker);
-            ticker.tick();
+    public final void process(Time worldTime) {
+        // Update own time with world time
+        time.advanceTime(worldTime.getLastStepDurationMs());
+
+        // Do normal processing if enough time has passed since the last time
+        if (time.getSecondsSinceLastStep() >= minProcessingIntervalSeconds) {
+            doProcess(time);
+            time.nextStep();
         }
     }
 
     /**
      * Processes this entity system.
      *
-     * @param systemTicker a ticker with information on how long since this system was last processed.
+     * @param systemTime a time with information on how long since this system was last processed.
      */
-    protected void doProcess(Ticker systemTicker) {
+    protected void doProcess(Time systemTime) {
     }
 
     @Override

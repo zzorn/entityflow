@@ -131,6 +131,7 @@ public class ConcurrentWorld extends BaseWorld {
     public <T extends Message> MessageHandler<T> addMessageHandler(Class<T> handledMessageType,
                                                                    MessageHandler<T> messageHandler) {
         Check.notNull(messageHandler, "messageHandler");
+        if (initialized.get()) throw new IllegalStateException("addMessageHandler must be called before init is called.");
 
         messageHandlerLookup.put(handledMessageType, messageHandler);
 

@@ -25,6 +25,9 @@ public interface World {
 
     /**
      * Add a handler for the specified type of message.
+     *
+     * Must be called before init() or start().
+     *
      * @param handledMessageType the exact type of messages that will be handled by this handler.  Subtypes of this message type will not be handled.
      * @param messageHandler the handler for the messages.
      * @return the messageHandler

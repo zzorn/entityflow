@@ -27,8 +27,13 @@ Perception - best to put in separate game library that uses this library
 
 Configuration - this would be best to implement as separate library
 * Support for reading configuration files in domain specific language from disk
+  * Could simply be a javascript style object markup, possibly with expression language support, constants support, and some import mechanics.
+    * Expressions could either be evaluated directly (for number valued or other fields), or parsed into expressions (for expression fields)
+      * Create a separate library for the expression parsing & expression language?
+        * Possible expression types: simple functional style expression, configuration language, or full language?
   * Use to create and initialize a set of specified beans
   * Possible to specify expressions to calculate bean properties, or to update the beans?
+* Configuration editable on the fly in javabean style editor, listener interfaces for notifying the application
 
 
 Networking - best to put in separate game library that uses this library

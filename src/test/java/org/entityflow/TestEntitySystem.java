@@ -26,7 +26,7 @@ public class TestEntitySystem {
     public void testSystem() throws Exception {
         // Create world
         final ManualTime worldTime = new ManualTime();
-        ConcurrentWorld world = new ConcurrentWorld(new TestPersistence(), worldTime);
+        ConcurrentWorld world = new ConcurrentWorld(worldTime, new TestPersistence());
 
         // Add a processor
         final TestProcessor testProcessor = new TestProcessor();
@@ -91,7 +91,7 @@ public class TestEntitySystem {
         // Create world
         final TestPersistence persistence = new TestPersistence();
         final ManualTime time = new ManualTime();
-        ConcurrentWorld world = new ConcurrentWorld(persistence, time);
+        ConcurrentWorld world = new ConcurrentWorld(time, persistence);
 
         // Add message handler
         final List<String> receivedMessages = new ArrayList<String>();

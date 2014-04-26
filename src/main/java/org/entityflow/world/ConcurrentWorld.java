@@ -6,6 +6,7 @@ import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.SoftReferenceObjectPool;
 import org.entityflow.entity.AddressedMessage;
 import org.entityflow.entity.Message;
+import org.entityflow.persistence.NoPersistence;
 import org.entityflow.persistence.PersistenceService;
 import org.entityflow.system.MessageHandler;
 import org.entityflow.system.Processor;
@@ -13,6 +14,7 @@ import org.entityflow.component.Component;
 import org.entityflow.entity.ConcurrentEntity;
 import org.entityflow.entity.Entity;
 import org.flowutils.Check;
+import org.flowutils.time.RealTime;
 import org.flowutils.time.Time;
 
 import java.util.ArrayList;
@@ -28,6 +30,11 @@ import java.util.concurrent.atomic.AtomicLong;
  * Manages all entities and systems in a game/simulation.
  */
 public class ConcurrentWorld extends BaseWorld {
+
+    /**
+     * Default simulation update interval in milliseconds.
+     */
+    public static final int DEFAULT_SIMULATION_STEP_MILLISECONDS = 5;
 
     // All systems registered with the world
     private final List<Processor> processors = new ArrayList<Processor>();
@@ -82,11 +89,40 @@ public class ConcurrentWorld extends BaseWorld {
 
 
 
-    public ConcurrentWorld(PersistenceService persistenceService, Time time) {
-        this(persistenceService, time, 1);
+    /**
+     * Creates a ConcurrentWorld using real time with fast simulation steps and no persistence.
+     */
+    public ConcurrentWorld() {
+        this(new RealTime());
     }
 
-    public ConcurrentWorld(PersistenceService persistenceService, Time time, long simulationStepMilliseconds) {
+    /**
+     * Creates a ConcurrentWorld with fast simulation steps and no persistence.
+     *
+     * @param time queried for the current game time.
+     */
+    public ConcurrentWorld(Time time) {
+        this(time, new NoPersistence());
+    }
+
+    /**
+     * Creates a ConcurrentWorld with fast simulation steps.
+     *
+     * @param time queried for the current game time.
+     * @param persistenceService service used for storing game state
+     */
+    public ConcurrentWorld(Time time, PersistenceService persistenceService) {
+        this(time, persistenceService, DEFAULT_SIMULATION_STEP_MILLISECONDS);
+    }
+
+    /**
+     * Creates a ConcurrentWorld
+     *
+     * @param time queried for the current game time.
+     * @param persistenceService service used for storing game state
+     * @param simulationStepMilliseconds interval for simulation steps.
+     */
+    public ConcurrentWorld(Time time, PersistenceService persistenceService, long simulationStepMilliseconds) {
         super(time);
 
         Check.notNull(persistenceService, "persistenceService");

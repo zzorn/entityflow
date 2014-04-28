@@ -102,27 +102,29 @@ public class ConcurrentWorld extends BaseWorld {
      * @param time queried for the current game time.
      */
     public ConcurrentWorld(Time time) {
-        this(time, new NoPersistence());
+        this(time, DEFAULT_SIMULATION_STEP_MILLISECONDS);
     }
 
     /**
-     * Creates a ConcurrentWorld with fast simulation steps.
+     * Creates a ConcurrentWorld with no persistence.
      *
      * @param time queried for the current game time.
-     * @param persistenceService service used for storing game state
-     */
-    public ConcurrentWorld(Time time, PersistenceService persistenceService) {
-        this(time, persistenceService, DEFAULT_SIMULATION_STEP_MILLISECONDS);
-    }
-
-    /**
-     * Creates a ConcurrentWorld
-     *
-     * @param time queried for the current game time.
-     * @param persistenceService service used for storing game state
      * @param simulationStepMilliseconds interval for simulation steps.
      */
-    public ConcurrentWorld(Time time, PersistenceService persistenceService, long simulationStepMilliseconds) {
+    public ConcurrentWorld(Time time, long simulationStepMilliseconds) {
+        this(time, simulationStepMilliseconds, new NoPersistence());
+    }
+
+    /**
+     * Creates a ConcurrentWorld with the specified parameters.
+     *
+     * @param time queried for the current game time.
+     * @param simulationStepMilliseconds interval for simulation steps.
+     * @param persistenceService service used for storing game state
+     */
+    public ConcurrentWorld(Time time,
+                           long simulationStepMilliseconds,
+                           PersistenceService persistenceService) {
         super(time);
 
         Check.notNull(persistenceService, "persistenceService");

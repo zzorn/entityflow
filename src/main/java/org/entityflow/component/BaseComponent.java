@@ -7,6 +7,7 @@ import org.flowutils.Check;
 /**
  * Base class for Component implementations, provides some common functionality.
  */
+// TODO: Rename to ComponentBase
 public abstract class BaseComponent implements Component {
 
     private final Class<? extends Component> baseType;

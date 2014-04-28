@@ -4,10 +4,7 @@ import org.entityflow.component.Component;
 import org.entityflow.entity.Entity;
 import org.flowutils.time.Time;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Base implementation of an Processor, provides functionality that is common for most Processors that handle entities.
@@ -112,7 +109,7 @@ public abstract class BaseEntityProcessor extends BaseProcessor {
      * @param time contains delta time and total simulation time.
      * @param entity entity to process.
      */
-    protected void processEntity(Time time, Entity entity) {}
+    protected abstract void processEntity(Time time, Entity entity);
 
     /**
      * Called after an entity is added to this system.
@@ -130,6 +127,20 @@ public abstract class BaseEntityProcessor extends BaseProcessor {
      */
     protected boolean shouldHandle(Entity entity) {
         return entity.containsAllComponents(handledComponentTypes);
+    }
+
+    /**
+     * @return read only list with the entities that are currently handled by this entity processor.
+     */
+    protected final List<Entity> getHandledEntities() {
+        return Collections.unmodifiableList(handledEntities);
+    }
+
+    /**
+     * @return read only set with the types of components that this entity processor handles.
+     */
+    protected final Set<Class<? extends Component>> getHandledComponentTypes() {
+        return Collections.unmodifiableSet(handledComponentTypes);
     }
 
     private void addEntityIfWeShould(Entity entity) {

@@ -116,6 +116,17 @@ public class ConcurrentWorld extends BaseWorld {
     }
 
     /**
+     * Creates a ConcurrentWorld with fast simulation step and the specified persistence service.
+     *
+     * @param time queried for the current game time.
+     * @param persistenceService service used for storing game state
+     */
+    public ConcurrentWorld(Time time, PersistenceService persistenceService) {
+        this(time, DEFAULT_SIMULATION_STEP_MILLISECONDS, persistenceService);
+    }
+
+
+    /**
      * Creates a ConcurrentWorld with the specified parameters.
      *
      * @param time queried for the current game time.

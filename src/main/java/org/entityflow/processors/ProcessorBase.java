@@ -4,6 +4,7 @@ package org.entityflow.processors;
 import org.entityflow.entity.Entity;
 import org.entityflow.world.World;
 import org.flowutils.LogUtils;
+import org.flowutils.service.ServiceBase;
 import org.flowutils.time.ManualTime;
 import org.flowutils.time.Time;
 import org.slf4j.Logger;
@@ -12,15 +13,13 @@ import org.slf4j.Logger;
  * Base class for processor implementations, does not do any entity management.
  */
 // TODO: Better timestep handling?
-public abstract class ProcessorBase implements Processor {
+public abstract class ProcessorBase extends ServiceBase implements Processor {
 
     protected final Class<? extends Processor> baseType;
     protected double minProcessingIntervalSeconds = 0;
     protected final ManualTime time = new ManualTime();
 
     private World world = null;
-
-    protected final Logger logger = LogUtils.getLogger();
 
     protected ProcessorBase() {
         this(null);
@@ -62,17 +61,10 @@ public abstract class ProcessorBase implements Processor {
 
     @Override
     public final void init(World world) {
-        logger.info("Initializing " + getName());
         this.world = world;
         time.reset();
-        onInit();
-    }
 
-    /**
-     * @return User readable name of the processor, as used in logging etc.
-     */
-    public String getName() {
-        return getClass().getSimpleName();
+        init();
     }
 
     /**
@@ -114,21 +106,4 @@ public abstract class ProcessorBase implements Processor {
     public void onEntityComponentsChanged(Entity entity) {
     }
 
-    @Override
-    public final void shutdown() {
-        logger.info("Shutting down " + getName());
-        onShutdown();
-    }
-
-    /**
-     * Called when the processor is initialized.
-     */
-    protected void onInit() {
-    }
-
-    /**
-     * Called when the processor is shutting down.
-     */
-    protected void onShutdown() {
-    }
 }

@@ -19,7 +19,7 @@ public final class ConcurrentEntityBase extends EntityBase {
     /**
      * Components that the entity contains.
      */
-    private final ConcurrentMap<Class<? extends Component>, Component> components = new ConcurrentHashMap<Class<? extends Component>, Component>();
+    private final ConcurrentMap<Class<? extends Component>, Component> components = new ConcurrentHashMap<Class<? extends Component>, Component>(3, 0.75f, 2);
 
     /**
      * Lock used to synchronize component changes with.

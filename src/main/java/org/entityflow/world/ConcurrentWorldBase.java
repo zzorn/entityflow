@@ -17,10 +17,7 @@ import org.flowutils.Check;
 import org.flowutils.time.RealTime;
 import org.flowutils.time.Time;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -39,8 +36,9 @@ public class ConcurrentWorldBase extends WorldBase {
     // All systems registered with the world
     private final List<Processor> processors = new ArrayList<Processor>();
 
-    // The entities list is not modified while a processors is processing entities, so processing can be done with multiple threads.
-    private final List<Entity> entities = new ArrayList<Entity>();
+    // The entities collection is not modified while a processors is processing entities, so processing can be done with multiple threads.
+    private final Set<Entity> entities = new HashSet<Entity>();
+    private final Collection<Entity> readOnlyViewOfEntities = Collections.unmodifiableCollection(entities);
 
     // Lookup map for entities based on entity id
     private final ConcurrentMap<Long, Entity> entityLookup = new ConcurrentHashMap<Long, Entity>();
@@ -204,6 +202,13 @@ public class ConcurrentWorldBase extends WorldBase {
     @Override
     public Entity getEntity(long entityId) {
         return entityLookup.get(entityId);
+    }
+
+    /**
+     * @return read only collection with the entities available in the world.
+     */
+    public final Collection<Entity> getEntities() {
+        return readOnlyViewOfEntities;
     }
 
     @Override

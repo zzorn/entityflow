@@ -2,13 +2,14 @@ package org.entityflow.processors;
 
 import org.entityflow.entity.Entity;
 import org.entityflow.world.World;
+import org.flowutils.service.Service;
 import org.flowutils.time.Time;
 
 /**
  * A processors that is specialized at simulating some aspect of the World.  Processes entities that contain some
  * set of Components that the Processor is interested in.
  */
-public interface Processor {
+public interface Processor extends Service {
 
     /**
      * The base type used when retrieving processors.

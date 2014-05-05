@@ -80,7 +80,7 @@ public interface Entity {
      *
      * @param message the message to handle.
      * @param externalSource true if the message originated from an external source such as a player client.
-     *                       false if it is from a system inside the simulation, such as a Processor.
+     *                       false if it is from a processors inside the simulation, such as a Processor.
      */
     void sendMessage(Message message, boolean externalSource);
 

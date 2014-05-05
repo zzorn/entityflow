@@ -1,11 +1,11 @@
-package org.entityflow.system;
+package org.entityflow.processors;
 
 import org.entityflow.entity.Entity;
 import org.entityflow.world.World;
 import org.flowutils.time.Time;
 
 /**
- * A system that is specialized at simulating some aspect of the World.  Processes entities that contain some
+ * A processors that is specialized at simulating some aspect of the World.  Processes entities that contain some
  * set of Components that the Processor is interested in.
  */
 public interface Processor {
@@ -23,13 +23,13 @@ public interface Processor {
     void init(World world);
 
     /**
-     * Called when the system is shut down, e.g. because the application is closing.
+     * Called when the processors is shut down, e.g. because the application is closing.
      * Can free any resources, flush disks, etc.
      */
     void shutdown();
 
     /**
-     * Processes all entities registered with this system.
+     * Processes all entities registered with this processors.
      * Should only be called by World.
      *
      * @param time contains information on time passed since the last call to process.

@@ -9,8 +9,8 @@ import org.entityflow.entity.ConcurrentEntityBase;
 import org.entityflow.entity.Message;
 import org.entityflow.persistence.NoPersistence;
 import org.entityflow.persistence.PersistenceService;
-import org.entityflow.system.MessageHandler;
-import org.entityflow.system.Processor;
+import org.entityflow.processors.MessageHandler;
+import org.entityflow.processors.Processor;
 import org.entityflow.component.Component;
 import org.entityflow.entity.Entity;
 import org.flowutils.Check;
@@ -39,7 +39,7 @@ public class ConcurrentWorldBase extends WorldBase {
     // All systems registered with the world
     private final List<Processor> processors = new ArrayList<Processor>();
 
-    // The entities list is not modified while a system is processing entities, so processing can be done with multiple threads.
+    // The entities list is not modified while a processors is processing entities, so processing can be done with multiple threads.
     private final List<Entity> entities = new ArrayList<Entity>();
 
     // Lookup map for entities based on entity id
@@ -159,7 +159,7 @@ public class ConcurrentWorldBase extends WorldBase {
         if (initialized.get()) throw new IllegalStateException("addProcessor must be called before init is called.");
 
         Class<? extends Processor> baseType = processor.getBaseType();
-        if (processorLookup.containsKey(baseType)) throw new IllegalStateException("A system using the base type '"+baseType+"' is already added!");
+        if (processorLookup.containsKey(baseType)) throw new IllegalStateException("A processors using the base type '"+baseType+"' is already added!");
 
         processorLookup.put(baseType, processor);
 
@@ -171,7 +171,7 @@ public class ConcurrentWorldBase extends WorldBase {
     @Override
     public final <T extends Processor> T getProcessor(Class<T> processorType) {
         Processor processor = processorLookup.get(processorType);
-        if (processor == null) throw new IllegalArgumentException("No entity system with the base type " +
+        if (processor == null) throw new IllegalArgumentException("No entity processors with the base type " +
                                                                   processorType + " found!");
         return (T) processor;
     }
@@ -253,13 +253,13 @@ public class ConcurrentWorldBase extends WorldBase {
                 messageHandler.handleMessage(entity, message);
             }
             else {
-                // Entity not found - TODO: log warning
-                System.out.println("No entity found for message " + addressedMessage + ", discarding message");
+                // Entity not found
+                logger.warn("No entity found for message " + addressedMessage + ", discarding message");
             }
         }
         else {
-            // No message handler found - TODO: log warning
-            System.out.println("No message handler found for message " + addressedMessage + ", discarding message");
+            // No message handler found
+            logger.warn("No message handler found for message " + addressedMessage + ", discarding message");
         }
 
         // Release message container

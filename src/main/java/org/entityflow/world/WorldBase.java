@@ -1,8 +1,10 @@
 package org.entityflow.world;
 
 import org.flowutils.Check;
+import org.flowutils.LogUtils;
 import org.flowutils.time.RealTime;
 import org.flowutils.time.Time;
+import org.slf4j.Logger;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -15,10 +17,12 @@ public abstract class WorldBase implements World {
     protected final AtomicBoolean initialized = new AtomicBoolean(false);
     protected final AtomicBoolean running = new AtomicBoolean(false);
 
+    protected long simulationStepMilliseconds;
+
     // Handles game time
     private final Time time;
 
-    protected long simulationStepMilliseconds;
+    protected final Logger logger = LogUtils.getLogger();
 
     protected WorldBase(Time time) {
         this.time = time;
@@ -26,8 +30,7 @@ public abstract class WorldBase implements World {
 
     @Override
     public final void init() {
-        // TODO: Add logging support
-        System.out.println("Initializing.");
+        logger.info("Initializing.");
 
         if (initialized.get()) throw new IllegalStateException("World was already initialized, can not initialize again");
 
@@ -59,6 +62,8 @@ public abstract class WorldBase implements World {
 
     @Override
     public final void start() {
+        logger.info("Starting.");
+
         running.set(true);
 
         // Initialize if needed
@@ -78,17 +83,18 @@ public abstract class WorldBase implements World {
             }
         }
 
-        // Do shutdown
-        doShutdown();
+        // Shutdown everything
+        shutdown();
     }
 
     @Override
     public final void shutdown() {
         if (running.get()) {
-            // Let game loop call doShutdown after the next loop is ready
+            // Let game loop call us after the next loop is ready
             running.set(false);
         }
         else {
+            logger.info("Shutting down.");
             doShutdown();
         }
     }

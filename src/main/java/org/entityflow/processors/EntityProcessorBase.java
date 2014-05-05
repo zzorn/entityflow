@@ -1,4 +1,4 @@
-package org.entityflow.system;
+package org.entityflow.processors;
 
 import org.entityflow.component.Component;
 import org.entityflow.entity.Entity;
@@ -11,7 +11,7 @@ import java.util.*;
  */
 // TODO: Support concurrent processing of entities if a flag to that effect is passed in the constructor.
 // Use a thread pool to process a part of the handled entities in each thread (concurrent reading of the handledEntities list is ok, as it is not modified during processing).
-// If concurrent processing is on, the processing of one entity by a system should never modify another handled by the same system.
+// If concurrent processing is on, the processing of one entity by a processors should never modify another handled by the same processors.
 public abstract class EntityProcessorBase extends ProcessorBase {
 
     // The types of components an entity should have for this processor to handle it.
@@ -26,7 +26,7 @@ public abstract class EntityProcessorBase extends ProcessorBase {
      * Creates a new BaseProcessor, that is interested in entities with the specified types of components.
      * Only entities with all the specified component types are processed by default.
      *
-     * @param handledComponentTypes entities with the component types listed here will be handled by this system.
+     * @param handledComponentTypes entities with the component types listed here will be handled by this processors.
      */
     protected EntityProcessorBase(Class<? extends Component>... handledComponentTypes) {
         this(null, 0, handledComponentTypes);
@@ -36,8 +36,8 @@ public abstract class EntityProcessorBase extends ProcessorBase {
      * Creates a new BaseProcessor, that is interested in entities with the specified types of components.
      * Only entities with all the specified component types are processed by default.
      *
-     * @param processingIntervalSeconds number of seconds between each process pass of this system, or zero to process as often as process() is called.
-     * @param handledComponentTypes entities with the component types listed here will be handled by this system.
+     * @param processingIntervalSeconds number of seconds between each process pass of this processors, or zero to process as often as process() is called.
+     * @param handledComponentTypes entities with the component types listed here will be handled by this processors.
      */
     protected EntityProcessorBase(double processingIntervalSeconds,
                                   Class<? extends Component>... handledComponentTypes) {
@@ -51,9 +51,9 @@ public abstract class EntityProcessorBase extends ProcessorBase {
      * Creates a new BaseProcessor, that is interested in entities with the specified types of components.
      * Only entities with all the specified component types are processed by default.
      *
-     * @param baseType the base type for this entity system, or the default one if null.
-     * @param processingIntervalSeconds number of seconds between each process pass of this system, or zero to process as often as process() is called.
-     * @param handledComponentTypes entities with the component types listed here will be handled by this system.
+     * @param baseType the base type for this entity processors, or the default one if null.
+     * @param processingIntervalSeconds number of seconds between each process pass of this processors, or zero to process as often as process() is called.
+     * @param handledComponentTypes entities with the component types listed here will be handled by this processors.
      */
     protected EntityProcessorBase(Class<? extends Processor> baseType,
                                   double processingIntervalSeconds,
@@ -118,18 +118,18 @@ public abstract class EntityProcessorBase extends ProcessorBase {
     protected abstract void processEntity(Time time, Entity entity);
 
     /**
-     * Called after an entity is added to this system.
+     * Called after an entity is added to this processors.
      */
     protected void handleAddedEntity(Entity entity) {}
 
     /**
-     * Called before an entity is removed from this system.
+     * Called before an entity is removed from this processors.
      */
     protected void handleRemovedEntity(Entity entity) {}
 
 
     /**
-     * @return true if this system should keep track of the specified entity and process it on each process call.
+     * @return true if this processors should keep track of the specified entity and process it on each process call.
      */
     protected boolean shouldHandle(Entity entity) {
         return entity.hasAll(handledComponentTypes);

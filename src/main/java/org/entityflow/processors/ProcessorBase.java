@@ -1,10 +1,12 @@
-package org.entityflow.system;
+package org.entityflow.processors;
 
 
 import org.entityflow.entity.Entity;
 import org.entityflow.world.World;
+import org.flowutils.LogUtils;
 import org.flowutils.time.ManualTime;
 import org.flowutils.time.Time;
+import org.slf4j.Logger;
 
 /**
  * Base class for processor implementations, does not do any entity management.
@@ -17,6 +19,8 @@ public abstract class ProcessorBase implements Processor {
     protected final ManualTime time = new ManualTime();
 
     private World world = null;
+
+    protected final Logger logger = LogUtils.getLogger();
 
     protected ProcessorBase() {
         this(null);
@@ -34,8 +38,8 @@ public abstract class ProcessorBase implements Processor {
     }
 
     /**
-     * @return an approximate minimum interval in seconds between each time that the system is processed.
-     *                                  Zero if the system is processed every time process() is called.
+     * @return an approximate minimum interval in seconds between each time that the processors is processed.
+     *                                  Zero if the processors is processed every time process() is called.
      *                                  Does at most one processing call each time World.process() is called.
      */
     public final double getMinProcessingIntervalSeconds() {
@@ -43,8 +47,8 @@ public abstract class ProcessorBase implements Processor {
     }
 
     /**
-     * @param minProcessingIntervalSeconds an approximate minimum interval in seconds between each time that the system is processed.
-     *                                  Set to zero to process the system every time process() is called.
+     * @param minProcessingIntervalSeconds an approximate minimum interval in seconds between each time that the processors is processed.
+     *                                  Set to zero to process the processors every time process() is called.
      *                                  Does at most one processing call each time World.process() is called.
      */
     public final void setMinProcessingIntervalSeconds(double minProcessingIntervalSeconds) {
@@ -58,13 +62,21 @@ public abstract class ProcessorBase implements Processor {
 
     @Override
     public final void init(World world) {
+        logger.info("Initializing " + getName());
         this.world = world;
         time.reset();
         onInit();
     }
 
     /**
-     * @return the world the system is added to, or null if not yet initialized.
+     * @return User readable name of the processor, as used in logging etc.
+     */
+    public String getName() {
+        return getClass().getSimpleName();
+    }
+
+    /**
+     * @return the world the processors is added to, or null if not yet initialized.
      */
     public final World getWorld() {
         return world;
@@ -83,9 +95,9 @@ public abstract class ProcessorBase implements Processor {
     }
 
     /**
-     * Processes this entity system.
+     * Processes this entity processors.
      *
-     * @param systemTime a time with information on how long since this system was last processed.
+     * @param systemTime a time with information on how long since this processors was last processed.
      */
     protected void doProcess(Time systemTime) {
     }
@@ -102,13 +114,21 @@ public abstract class ProcessorBase implements Processor {
     public void onEntityComponentsChanged(Entity entity) {
     }
 
+    @Override
+    public final void shutdown() {
+        logger.info("Shutting down " + getName());
+        onShutdown();
+    }
+
     /**
-     * Called when the system is initialized.
+     * Called when the processor is initialized.
      */
     protected void onInit() {
     }
 
-    @Override
-    public void shutdown() {
+    /**
+     * Called when the processor is shutting down.
+     */
+    protected void onShutdown() {
     }
 }

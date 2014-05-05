@@ -1,4 +1,4 @@
-package org.entityflow.system;
+package org.entityflow.processors;
 
 import org.entityflow.entity.Entity;
 import org.entityflow.entity.Message;

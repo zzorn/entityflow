@@ -4,8 +4,8 @@ import org.entityflow.component.ComponentBase;
 import org.entityflow.entity.Entity;
 import org.entityflow.entity.Message;
 import org.entityflow.persistence.PersistenceService;
-import org.entityflow.system.EntityProcessorBase;
-import org.entityflow.system.MessageHandler;
+import org.entityflow.processors.EntityProcessorBase;
+import org.entityflow.processors.MessageHandler;
 import org.entityflow.world.ConcurrentWorldBase;
 import org.flowutils.time.ManualTime;
 import org.flowutils.time.Time;
@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 /**
- * High level test of the system.
+ * High level test of the processors.
  */
 public class TestEntitySystem {
 
@@ -82,6 +82,8 @@ public class TestEntitySystem {
         assertEquals(3, entity3.getId());
         assertTrue(entity != entity3);
 
+        // Shutdown
+        world.shutdown();
     }
 
 
@@ -141,6 +143,9 @@ public class TestEntitySystem {
         world.process();
 
         assertArrayEquals(new String[]{"msg1int", "msg2ext", "msg3ext", "msg4int", "msg5int", "msg6ext", "msg7ext", "msg8ext"}, receivedMessages.toArray());
+
+        // Shutdown
+        world.shutdown();
     }
 
     private class TestComponentBase extends ComponentBase {

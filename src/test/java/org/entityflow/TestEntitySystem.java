@@ -1,12 +1,12 @@
 package org.entityflow;
 
-import org.entityflow.component.BaseComponent;
+import org.entityflow.component.ComponentBase;
 import org.entityflow.entity.Entity;
 import org.entityflow.entity.Message;
 import org.entityflow.persistence.PersistenceService;
-import org.entityflow.system.BaseEntityProcessor;
+import org.entityflow.system.EntityProcessorBase;
 import org.entityflow.system.MessageHandler;
-import org.entityflow.world.ConcurrentWorld;
+import org.entityflow.world.ConcurrentWorldBase;
 import org.flowutils.time.ManualTime;
 import org.flowutils.time.Time;
 import org.junit.Test;
@@ -26,43 +26,43 @@ public class TestEntitySystem {
     public void testSystem() throws Exception {
         // Create world
         final ManualTime worldTime = new ManualTime();
-        ConcurrentWorld world = new ConcurrentWorld(worldTime, new TestPersistence());
+        ConcurrentWorldBase world = new ConcurrentWorldBase(worldTime, new TestPersistence());
 
         // Add a processor
-        final TestProcessor testProcessor = new TestProcessor();
+        final TestProcessorBase testProcessor = new TestProcessorBase();
         world.addProcessor(testProcessor);
         assertEquals("World should have the test processor we specified",
-                     testProcessor, world.getProcessor(TestProcessor.class));
+                     testProcessor, world.getProcessor(TestProcessorBase.class));
 
         // Initialize world
         world.init();
 
         // Add an entity
-        final TestComponent testComponent = new TestComponent();
+        final TestComponentBase testComponent = new TestComponentBase();
         final Entity entity = world.createEntity(testComponent);
 
         assertNotNull("Entity should have been created", entity);
 
-        assertNotEquals("Entity should have a valid id", 0, entity.getEntityId());
+        assertNotEquals("Entity should have a valid id", 0, entity.getId());
 
         assertEquals("Entity should have the component we specified",
-                     testComponent, entity.getComponent(TestComponent.class));
+                     testComponent, entity.get(TestComponentBase.class));
 
         assertEquals("Entity should know the world it is in", world, entity.getWorld());
 
         // Simulate
-        final TestComponent testComponent2 = entity.getComponent(TestComponent.class);
+        final TestComponentBase testComponent2 = entity.get(TestComponentBase.class);
         assertEquals("No tick should have been logged", 0, testComponent2.counter);
 
         worldTime.advanceTime(2500);
         worldTime.nextStep();
         world.process();
 
-        final TestComponent testComponent3 = entity.getComponent(TestComponent.class);
+        final TestComponentBase testComponent3 = entity.get(TestComponentBase.class);
         assertEquals("One tick should have been logged", 1, testComponent3.counter);
 
         // Test entity deleted
-        final long id = entity.getEntityId();
+        final long id = entity.getId();
         assertEquals(entity, world.getEntity(id));
         world.deleteEntity(entity);
 
@@ -74,12 +74,12 @@ public class TestEntitySystem {
         assertEquals(1, testComponent.counter);
 
         // Test recreate (should use pooled entity)
-        final Entity entity2 = world.createEntity(new TestComponent());
-        assertEquals(2, entity2.getEntityId());
+        final Entity entity2 = world.createEntity(new TestComponentBase());
+        assertEquals(2, entity2.getId());
         assertTrue(entity == entity2);
 
-        final Entity entity3 = world.createEntity(new TestComponent());
-        assertEquals(3, entity3.getEntityId());
+        final Entity entity3 = world.createEntity(new TestComponentBase());
+        assertEquals(3, entity3.getId());
         assertTrue(entity != entity3);
 
     }
@@ -91,7 +91,7 @@ public class TestEntitySystem {
         // Create world
         final TestPersistence persistence = new TestPersistence();
         final ManualTime time = new ManualTime();
-        ConcurrentWorld world = new ConcurrentWorld(time, persistence);
+        ConcurrentWorldBase world = new ConcurrentWorldBase(time, persistence);
 
         // Add message handler
         final List<String> receivedMessages = new ArrayList<String>();
@@ -103,7 +103,7 @@ public class TestEntitySystem {
         });
 
         // Add an entity
-        final TestComponent testComponent = new TestComponent();
+        final TestComponentBase testComponent = new TestComponentBase();
         final Entity entity = world.createEntity(testComponent);
 
         // Initialize world
@@ -115,8 +115,8 @@ public class TestEntitySystem {
         world.sendMessage(entity, new TestMessage("msg3ext"), true);
         world.sendMessage(entity, new TestMessage("msg4int"), false);
 
-        world.sendMessage(entity.getEntityId(), new TestMessage("msg5int"), false);
-        world.sendMessage(entity.getEntityId(), new TestMessage("msg6ext"), true);
+        world.sendMessage(entity.getId(), new TestMessage("msg5int"), false);
+        world.sendMessage(entity.getId(), new TestMessage("msg6ext"), true);
 
         assertArrayEquals(new String[]{}, receivedMessages.toArray());
 
@@ -143,17 +143,17 @@ public class TestEntitySystem {
         assertArrayEquals(new String[]{"msg1int", "msg2ext", "msg3ext", "msg4int", "msg5int", "msg6ext", "msg7ext", "msg8ext"}, receivedMessages.toArray());
     }
 
-    private class TestComponent extends BaseComponent {
+    private class TestComponentBase extends ComponentBase {
         public int counter = 0;
     }
 
-    private class TestProcessor extends BaseEntityProcessor {
-        protected TestProcessor() {
-            super(null, 1, TestComponent.class);
+    private class TestProcessorBase extends EntityProcessorBase {
+        protected TestProcessorBase() {
+            super(null, 1, TestComponentBase.class);
         }
 
         @Override protected void processEntity(Time time, Entity entity) {
-            final TestComponent testComponent = entity.getComponent(TestComponent.class);
+            final TestComponentBase testComponent = entity.get(TestComponentBase.class);
             testComponent.counter++;
         }
     }

@@ -16,7 +16,7 @@ public interface Entity {
     /**
      * @return id of this entity.  Unique within the world the entity belongs to.
      */
-    long getEntityId();
+    long getId();
 
     /**
      * @return the world that this entity is stored in.
@@ -35,27 +35,22 @@ public interface Entity {
     /**
      * @return the component with the specified base type, or null if nor present in this entity.
      */
-    <T extends Component> T getComponent(Class<T> type);
+    <T extends Component> T get(Class<T> type);
 
     /**
-     * Adds the specified component to this entity.  The component will replace any previous component with the same base type.
+     * Adds the specified component(s) to this entity.  The components will replace any previous components with the same base types.
      */
-    void addComponent(Component component);
-
-    /**
-     * Adds the specified components to this entity.  The components will replace any previous components with the same base types.
-     */
-    void addComponents(Component ... components);
+    void add(Component... components);
 
     /**
      * Removes the component of the specified base type from this entity.
      */
-    <T extends Component> void removeComponent(Class<T> type);
+    <T extends Component> void remove(Class<T> type);
 
     /**
      * @return true if this entity contains a component with the specified base type.
      */
-    <T extends Component> boolean containsComponent(Class<T> type);
+    <T extends Component> boolean has(Class<T> type);
 
     /**
      * Returns all components in this entity by adding them to the specified collection.
@@ -66,7 +61,7 @@ public interface Entity {
     /**
      * @return true if this entity contains all components of the specified type ids.
      */
-    boolean containsAllComponents(Set<Class<? extends Component>> componentTypes);
+    boolean hasAll(Set<Class<? extends Component>> componentTypes);
 
     /**
      * Removes this entity from the game world on the next world process update.

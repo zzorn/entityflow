@@ -1,14 +1,12 @@
 package org.entityflow.entity;
 
 import org.entityflow.component.Component;
-import org.entityflow.world.World;
 import org.flowutils.Check;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -16,7 +14,7 @@ import java.util.concurrent.ConcurrentMap;
  * Note that modifications to a specific component should only happen from one thread at a time unless the component
  * itself supports concurrency.
  */
-public final class ConcurrentEntity extends BaseEntity {
+public final class ConcurrentEntityBase extends EntityBase {
 
     /**
      * Components that the entity contains.
@@ -38,19 +36,12 @@ public final class ConcurrentEntity extends BaseEntity {
         return components;
     }
 
-    @Override public <T extends Component> T getComponent(Class<T> type) {
+    @Override public <T extends Component> T get(Class<T> type) {
         return (T) components.get(type);
     }
 
-    @Override public void addComponent(Component component) {
-        Check.notNull(component, "component");
 
-        synchronized (componentChangeLock) {
-            rawAddComponent(component);
-        }
-    }
-
-    @Override public void addComponents(Component... components) {
+    @Override public void add(Component... components) {
         synchronized (componentChangeLock) {
             for (Component component : components) {
                 rawAddComponent(component);
@@ -58,17 +49,17 @@ public final class ConcurrentEntity extends BaseEntity {
         }
     }
 
-    @Override public <T extends Component> void removeComponent(final Class<T> type) {
+    @Override public <T extends Component> void remove(final Class<T> type) {
         synchronized (componentChangeLock) {
             rawRemoveComponent(type);
         }
     }
 
-    @Override public <T extends Component> boolean containsComponent(Class<T> type) {
+    @Override public <T extends Component> boolean has(Class<T> type) {
         return components.containsKey(type);
     }
 
-    @Override public boolean containsAllComponents(Set<Class<? extends Component>> componentTypes) {
+    @Override public boolean hasAll(Set<Class<? extends Component>> componentTypes) {
         for (Class<? extends Component> componentType : componentTypes) {
             if (!components.containsKey(componentType)) return false;
         }

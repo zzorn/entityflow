@@ -10,7 +10,7 @@ import org.flowutils.time.Time;
  * Base class for processor implementations, does not do any entity management.
  */
 // TODO: Better timestep handling?
-public abstract class BaseProcessor implements Processor {
+public abstract class ProcessorBase implements Processor {
 
     protected final Class<? extends Processor> baseType;
     protected double minProcessingIntervalSeconds = 0;
@@ -18,15 +18,15 @@ public abstract class BaseProcessor implements Processor {
 
     private World world = null;
 
-    protected BaseProcessor() {
+    protected ProcessorBase() {
         this(null);
     }
 
-    protected BaseProcessor(Class<? extends Processor> baseType) {
+    protected ProcessorBase(Class<? extends Processor> baseType) {
         this(baseType, 0);
     }
 
-    protected BaseProcessor(Class<? extends Processor> baseType, double minProcessingIntervalSeconds) {
+    protected ProcessorBase(Class<? extends Processor> baseType, double minProcessingIntervalSeconds) {
         if (baseType == null) this.baseType = getClass();
         else this.baseType = baseType;
 

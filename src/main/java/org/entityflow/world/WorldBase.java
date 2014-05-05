@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Contains general code for a world.
  * Can be used as base class for various implementations.
  */
-public abstract class BaseWorld implements World {
+public abstract class WorldBase implements World {
 
     protected final AtomicBoolean initialized = new AtomicBoolean(false);
     protected final AtomicBoolean running = new AtomicBoolean(false);
@@ -20,7 +20,7 @@ public abstract class BaseWorld implements World {
 
     protected long simulationStepMilliseconds;
 
-    protected BaseWorld(Time time) {
+    protected WorldBase(Time time) {
         this.time = time;
     }
 

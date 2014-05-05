@@ -8,7 +8,7 @@ import java.util.Set;
 /**
  * Common functionality for entities.
  */
-public abstract class BaseEntity implements Entity {
+public abstract class EntityBase implements Entity {
 
     /**
      * Unique id for this entity within the World.
@@ -29,19 +29,13 @@ public abstract class BaseEntity implements Entity {
         onInit();
     }
 
-    @Override public void addComponents(Component... components) {
-        for (Component component : components) {
-            addComponent(component);
-        }
-    }
-
     @Override
     public final World getWorld() {
         return world;
     }
 
     @Override
-    public final long getEntityId() {
+    public final long getId() {
         return entityId;
     }
 
@@ -56,9 +50,9 @@ public abstract class BaseEntity implements Entity {
         world = null;
     }
 
-    @Override public boolean containsAllComponents(Set<Class<? extends Component>> componentTypes) {
+    @Override public boolean hasAll(Set<Class<? extends Component>> componentTypes) {
         for (Class<? extends Component> componentType : componentTypes) {
-            if (!containsComponent(componentType)) return false;
+            if (!has(componentType)) return false;
         }
         return true;
     }

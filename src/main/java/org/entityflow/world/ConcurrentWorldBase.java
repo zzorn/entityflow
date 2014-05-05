@@ -5,13 +5,13 @@ import org.apache.commons.pool.BasePoolableObjectFactory;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.SoftReferenceObjectPool;
 import org.entityflow.entity.AddressedMessage;
+import org.entityflow.entity.ConcurrentEntityBase;
 import org.entityflow.entity.Message;
 import org.entityflow.persistence.NoPersistence;
 import org.entityflow.persistence.PersistenceService;
 import org.entityflow.system.MessageHandler;
 import org.entityflow.system.Processor;
 import org.entityflow.component.Component;
-import org.entityflow.entity.ConcurrentEntity;
 import org.entityflow.entity.Entity;
 import org.flowutils.Check;
 import org.flowutils.time.RealTime;
@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Manages all entities and systems in a game/simulation.
  */
-public class ConcurrentWorld extends BaseWorld {
+public class ConcurrentWorldBase extends WorldBase {
 
     /**
      * Default simulation update interval in milliseconds.
@@ -63,7 +63,7 @@ public class ConcurrentWorld extends BaseWorld {
     // Object pool for recycling entity references
     private final ObjectPool<Entity> entityPool = new SoftReferenceObjectPool<Entity>(new BasePoolableObjectFactory<Entity>() {
         @Override public Entity makeObject() throws Exception {
-            return new ConcurrentEntity();
+            return new ConcurrentEntityBase();
         }
     });
 
@@ -92,7 +92,7 @@ public class ConcurrentWorld extends BaseWorld {
     /**
      * Creates a ConcurrentWorld using real time with fast simulation steps and no persistence.
      */
-    public ConcurrentWorld() {
+    public ConcurrentWorldBase() {
         this(new RealTime());
     }
 
@@ -101,7 +101,7 @@ public class ConcurrentWorld extends BaseWorld {
      *
      * @param time queried for the current game time.
      */
-    public ConcurrentWorld(Time time) {
+    public ConcurrentWorldBase(Time time) {
         this(time, DEFAULT_SIMULATION_STEP_MILLISECONDS);
     }
 
@@ -111,7 +111,7 @@ public class ConcurrentWorld extends BaseWorld {
      * @param time queried for the current game time.
      * @param simulationStepMilliseconds interval for simulation steps.
      */
-    public ConcurrentWorld(Time time, long simulationStepMilliseconds) {
+    public ConcurrentWorldBase(Time time, long simulationStepMilliseconds) {
         this(time, simulationStepMilliseconds, new NoPersistence());
     }
 
@@ -121,7 +121,7 @@ public class ConcurrentWorld extends BaseWorld {
      * @param time queried for the current game time.
      * @param persistenceService service used for storing game state
      */
-    public ConcurrentWorld(Time time, PersistenceService persistenceService) {
+    public ConcurrentWorldBase(Time time, PersistenceService persistenceService) {
         this(time, DEFAULT_SIMULATION_STEP_MILLISECONDS, persistenceService);
     }
 
@@ -133,9 +133,9 @@ public class ConcurrentWorld extends BaseWorld {
      * @param simulationStepMilliseconds interval for simulation steps.
      * @param persistenceService service used for storing game state
      */
-    public ConcurrentWorld(Time time,
-                           long simulationStepMilliseconds,
-                           PersistenceService persistenceService) {
+    public ConcurrentWorldBase(Time time,
+                               long simulationStepMilliseconds,
+                               PersistenceService persistenceService) {
         super(time);
 
         Check.notNull(persistenceService, "persistenceService");
@@ -283,7 +283,7 @@ public class ConcurrentWorld extends BaseWorld {
             throw new IllegalStateException("Could not create a new entity, problem creating entity object with pool: " + e.getMessage(), e);
         }
         entity.init(entityId, this);
-        entity.addComponents(components);
+        entity.add(components);
 
         // Schedule for addition
         addedAndRemovedEntities.put(entity, true);
@@ -298,7 +298,7 @@ public class ConcurrentWorld extends BaseWorld {
                                                                           "The target entity is in the world '"+entity.getWorld()+"', but this is world '"+this+"'.  " +
                                                                           "The message was '"+message+"'");
 
-        sendMessage(entity.getEntityId(), message, externalSource);
+        sendMessage(entity.getId(), message, externalSource);
     }
 
     @Override public void sendMessage(long entityId, Message message, boolean externalSource) {
@@ -348,7 +348,7 @@ public class ConcurrentWorld extends BaseWorld {
             if (add) {
                 // Add entity
                 entities.add(entity);
-                entityLookup.put(entity.getEntityId(), entity);
+                entityLookup.put(entity.getId(), entity);
 
                 // Notify systems
                 for (Processor processor : processors) {
@@ -369,7 +369,7 @@ public class ConcurrentWorld extends BaseWorld {
                     }
 
                     // Cleanup entity
-                    long entityId = entity.getEntityId();
+                    long entityId = entity.getId();
                     entity.onDeleted();
                     entityLookup.remove(entityId);
 

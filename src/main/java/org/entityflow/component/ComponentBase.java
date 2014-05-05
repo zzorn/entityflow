@@ -7,8 +7,7 @@ import org.flowutils.Check;
 /**
  * Base class for Component implementations, provides some common functionality.
  */
-// TODO: Rename to ComponentBase
-public abstract class BaseComponent implements Component {
+public abstract class ComponentBase implements Component {
 
     private final Class<? extends Component> baseType;
     private Entity entity;
@@ -16,7 +15,7 @@ public abstract class BaseComponent implements Component {
     /**
      * Creates a new component with the component type id based on the components implementation class.
      */
-    public BaseComponent() {
+    public ComponentBase() {
         this(null);
     }
 
@@ -27,7 +26,7 @@ public abstract class BaseComponent implements Component {
      *                 E.g. a Position interface might extend Component interface and have two implementations,
      *                 WorldPosition and InventoryPosition, either of which could be used as the position component of an entity, but not at the same time.
      */
-    public BaseComponent(Class<? extends Component> baseType) {
+    public ComponentBase(Class<? extends Component> baseType) {
         if (baseType == null) baseType = getClass();
         if (!baseType.isAssignableFrom(getClass()))
             throw new IllegalArgumentException("The component type should be assignable to the specified base type.");

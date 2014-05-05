@@ -12,7 +12,7 @@ import java.util.*;
 // TODO: Support concurrent processing of entities if a flag to that effect is passed in the constructor.
 // Use a thread pool to process a part of the handled entities in each thread (concurrent reading of the handledEntities list is ok, as it is not modified during processing).
 // If concurrent processing is on, the processing of one entity by a system should never modify another handled by the same system.
-public abstract class BaseEntityProcessor extends BaseProcessor {
+public abstract class EntityProcessorBase extends ProcessorBase {
 
     // The types of components an entity should have for this processor to handle it.
     private final Set<Class<? extends Component>> handledComponentTypes = new HashSet<Class<? extends Component>>();
@@ -23,22 +23,28 @@ public abstract class BaseEntityProcessor extends BaseProcessor {
 
 
     /**
-     * Creates a new BaseProcessor.
+     * Creates a new BaseProcessor, that is interested in entities with the specified types of components.
+     * Only entities with all the specified component types are processed by default.
+     *
+     * @param handledComponentTypes entities with the component types listed here will be handled by this system.
      */
-    protected BaseEntityProcessor() {
-        this(null);
+    protected EntityProcessorBase(Class<? extends Component>... handledComponentTypes) {
+        this(null, 0, handledComponentTypes);
     }
 
     /**
      * Creates a new BaseProcessor, that is interested in entities with the specified types of components.
      * Only entities with all the specified component types are processed by default.
      *
-     * @param baseType the base type for this entity system, or the default one if null.
+     * @param processingIntervalSeconds number of seconds between each process pass of this system, or zero to process as often as process() is called.
      * @param handledComponentTypes entities with the component types listed here will be handled by this system.
      */
-    protected BaseEntityProcessor(Class<? extends Processor> baseType,
+    protected EntityProcessorBase(double processingIntervalSeconds,
                                   Class<? extends Component>... handledComponentTypes) {
-        this(baseType, 0, handledComponentTypes);
+        super(null, processingIntervalSeconds);
+        for (Class<? extends Component> handledComponentType : handledComponentTypes) {
+            this.handledComponentTypes.add(handledComponentType);
+        }
     }
 
     /**
@@ -49,7 +55,7 @@ public abstract class BaseEntityProcessor extends BaseProcessor {
      * @param processingIntervalSeconds number of seconds between each process pass of this system, or zero to process as often as process() is called.
      * @param handledComponentTypes entities with the component types listed here will be handled by this system.
      */
-    protected BaseEntityProcessor(Class<? extends Processor> baseType,
+    protected EntityProcessorBase(Class<? extends Processor> baseType,
                                   double processingIntervalSeconds,
                                   Class<? extends Component>... handledComponentTypes) {
         super(baseType, processingIntervalSeconds);
@@ -126,7 +132,7 @@ public abstract class BaseEntityProcessor extends BaseProcessor {
      * @return true if this system should keep track of the specified entity and process it on each process call.
      */
     protected boolean shouldHandle(Entity entity) {
-        return entity.containsAllComponents(handledComponentTypes);
+        return entity.hasAll(handledComponentTypes);
     }
 
     /**

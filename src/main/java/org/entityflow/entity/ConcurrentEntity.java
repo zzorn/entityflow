@@ -14,12 +14,12 @@ import java.util.concurrent.ConcurrentMap;
  * Note that modifications to a specific component should only happen from one thread at a time unless the component
  * itself supports concurrency.
  */
-public final class ConcurrentEntityBase extends EntityBase {
+public final class ConcurrentEntity extends EntityBase {
 
     /**
      * Components that the entity contains.
      */
-    private final ConcurrentMap<Class<? extends Component>, Component> components = new ConcurrentHashMap<Class<? extends Component>, Component>(3, 0.75f, 2);
+    private final ConcurrentMap<Class<? extends Component>, Component> components = new ConcurrentHashMap<Class<? extends Component>, Component>(3, 0.75f, 4);
 
     /**
      * Lock used to synchronize component changes with.

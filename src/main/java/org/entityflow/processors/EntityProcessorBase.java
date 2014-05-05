@@ -41,7 +41,19 @@ public abstract class EntityProcessorBase extends ProcessorBase {
      * @param handledComponentTypes entities with the component types listed here will be handled by this processors.
      */
     protected EntityProcessorBase(Class<? extends Component>... handledComponentTypes) {
-        this(null, 0, false, handledComponentTypes);
+        this(0, handledComponentTypes);
+    }
+
+    /**
+     * Creates a new BaseProcessor, that is interested in entities with the specified types of components.
+     * Only entities with all the specified component types are processed by default.
+     *
+     * @param processingIntervalSeconds number of seconds between each process pass of this processors, or zero to process as often as process() is called.
+     * @param handledComponentTypes entities with the component types listed here will be handled by this processors.
+     */
+    protected EntityProcessorBase(double processingIntervalSeconds,
+                                  Class<? extends Component>... handledComponentTypes) {
+        this(processingIntervalSeconds, false, handledComponentTypes);
     }
 
     /**
@@ -83,9 +95,9 @@ public abstract class EntityProcessorBase extends ProcessorBase {
         // Initialize entity collection
         handledEntities.setMutator(new BalancingCompositeSetMutator<Entity>());
 
-        // Initialize concurrent processing
         this.concurrentProcessing = concurrentProcessing;
         if (concurrentProcessing) {
+            // Initialize concurrent processing
             threadCount = getThreadCount();
             processingStartBarrier = new CyclicBarrier(threadCount + 1);
             processingEndBarrier = new CyclicBarrier(threadCount + 1);

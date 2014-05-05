@@ -5,7 +5,7 @@ import org.apache.commons.pool.BasePoolableObjectFactory;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.SoftReferenceObjectPool;
 import org.entityflow.entity.AddressedMessage;
-import org.entityflow.entity.ConcurrentEntityBase;
+import org.entityflow.entity.ConcurrentEntity;
 import org.entityflow.entity.Message;
 import org.entityflow.persistence.NoPersistence;
 import org.entityflow.persistence.PersistenceService;
@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Manages all entities and systems in a game/simulation.
  */
-public class ConcurrentWorldBase extends WorldBase {
+public class ConcurrentWorld extends WorldBase {
 
     /**
      * Default simulation update interval in milliseconds.
@@ -61,7 +61,7 @@ public class ConcurrentWorldBase extends WorldBase {
     // Object pool for recycling entity references
     private final ObjectPool<Entity> entityPool = new SoftReferenceObjectPool<Entity>(new BasePoolableObjectFactory<Entity>() {
         @Override public Entity makeObject() throws Exception {
-            return new ConcurrentEntityBase();
+            return new ConcurrentEntity();
         }
     });
 
@@ -90,7 +90,7 @@ public class ConcurrentWorldBase extends WorldBase {
     /**
      * Creates a ConcurrentWorld using real time with fast simulation steps and no persistence.
      */
-    public ConcurrentWorldBase() {
+    public ConcurrentWorld() {
         this(new RealTime());
     }
 
@@ -99,7 +99,7 @@ public class ConcurrentWorldBase extends WorldBase {
      *
      * @param time queried for the current game time.
      */
-    public ConcurrentWorldBase(Time time) {
+    public ConcurrentWorld(Time time) {
         this(time, DEFAULT_SIMULATION_STEP_MILLISECONDS);
     }
 
@@ -109,7 +109,7 @@ public class ConcurrentWorldBase extends WorldBase {
      * @param time queried for the current game time.
      * @param simulationStepMilliseconds interval for simulation steps.
      */
-    public ConcurrentWorldBase(Time time, long simulationStepMilliseconds) {
+    public ConcurrentWorld(Time time, long simulationStepMilliseconds) {
         this(time, simulationStepMilliseconds, new NoPersistence());
     }
 
@@ -119,7 +119,7 @@ public class ConcurrentWorldBase extends WorldBase {
      * @param time queried for the current game time.
      * @param persistenceService service used for storing game state
      */
-    public ConcurrentWorldBase(Time time, PersistenceService persistenceService) {
+    public ConcurrentWorld(Time time, PersistenceService persistenceService) {
         this(time, DEFAULT_SIMULATION_STEP_MILLISECONDS, persistenceService);
     }
 
@@ -131,9 +131,9 @@ public class ConcurrentWorldBase extends WorldBase {
      * @param simulationStepMilliseconds interval for simulation steps.
      * @param persistenceService service used for storing game state
      */
-    public ConcurrentWorldBase(Time time,
-                               long simulationStepMilliseconds,
-                               PersistenceService persistenceService) {
+    public ConcurrentWorld(Time time,
+                           long simulationStepMilliseconds,
+                           PersistenceService persistenceService) {
         super(time);
 
         Check.notNull(persistenceService, "persistenceService");

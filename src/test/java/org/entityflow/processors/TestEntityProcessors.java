@@ -4,7 +4,7 @@ import org.entityflow.component.ComponentBase;
 import org.entityflow.entity.Entity;
 import org.entityflow.entity.Message;
 import org.entityflow.persistence.PersistenceService;
-import org.entityflow.world.ConcurrentWorldBase;
+import org.entityflow.world.ConcurrentWorld;
 import org.flowutils.Stopwatch;
 import org.flowutils.time.ManualTime;
 import org.flowutils.time.Time;
@@ -26,7 +26,7 @@ public class TestEntityProcessors {
     public void testSystem() throws Exception {
         // Create world
         final ManualTime worldTime = new ManualTime();
-        ConcurrentWorldBase world = new ConcurrentWorldBase(worldTime, new TestPersistence());
+        ConcurrentWorld world = new ConcurrentWorld(worldTime, new TestPersistence());
 
         // Add a processor
         final TestProcessor testProcessor = new TestProcessor(false, 1, 10);
@@ -92,7 +92,7 @@ public class TestEntityProcessors {
         // Create world
         final TestPersistence persistence = new TestPersistence();
         final ManualTime time = new ManualTime();
-        ConcurrentWorldBase world = new ConcurrentWorldBase(time, persistence);
+        ConcurrentWorld world = new ConcurrentWorld(time, persistence);
 
         // Add message handler
         final List<String> receivedMessages = new ArrayList<String>();
@@ -206,7 +206,7 @@ public class TestEntityProcessors {
 
         // Create world
         final ManualTime worldTime = new ManualTime();
-        ConcurrentWorldBase world = new ConcurrentWorldBase(worldTime, new TestPersistence());
+        ConcurrentWorld world = new ConcurrentWorld(worldTime, new TestPersistence());
 
         // Add a processor
         final TestProcessor testProcessor = new TestProcessor(concurrentProcessing, 0.99, entityUpdateHeaviness);

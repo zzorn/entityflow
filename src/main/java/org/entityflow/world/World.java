@@ -6,6 +6,7 @@ import org.entityflow.processors.MessageHandler;
 import org.entityflow.processors.Processor;
 import org.entityflow.component.Component;
 import org.entityflow.entity.Entity;
+import org.flowutils.time.Time;
 
 /**
  * Manages all entities and systems in a game/simulation.
@@ -125,4 +126,8 @@ public interface World {
      */
     PersistenceService getPersistenceService();
 
+    /**
+     * @return Time used by this World.
+     */
+    Time getTime();
 }

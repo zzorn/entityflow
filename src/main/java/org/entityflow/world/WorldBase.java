@@ -99,7 +99,7 @@ public abstract class WorldBase implements World {
         }
     }
 
-    public final Time getTime() {
+    @Override public final Time getTime() {
         return time;
     }
 

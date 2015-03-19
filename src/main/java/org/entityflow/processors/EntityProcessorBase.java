@@ -4,6 +4,7 @@ import org.apache.commons.collections4.set.CompositeSet;
 import org.entityflow.component.Component;
 import org.entityflow.entity.Entity;
 import org.entityflow.utils.BalancingCompositeSetMutator;
+import org.flowutils.service.ServiceProvider;
 import org.flowutils.time.Time;
 
 import java.util.*;
@@ -241,10 +242,10 @@ public abstract class EntityProcessorBase extends ProcessorBase {
         return Math.max(2, Runtime.getRuntime().availableProcessors());
     }
 
-    @Override protected final void doInit() {
+    @Override protected void doInit(ServiceProvider serviceProvider) {
         initializeProcessingThreads();
 
-        onInit();
+        onInit(serviceProvider);
     }
 
     @Override protected final void doShutdown() {
@@ -255,8 +256,9 @@ public abstract class EntityProcessorBase extends ProcessorBase {
 
     /**
      * Called when the processor is initialized.
+     * @param serviceProvider can be queried for other services.  Not all services have necessarily been initialized yet.
      */
-    protected void onInit() {
+    protected void onInit(ServiceProvider serviceProvider) {
     }
 
     /**
@@ -281,7 +283,7 @@ public abstract class EntityProcessorBase extends ProcessorBase {
 
                 // Provide easy to understand name for the thread, for easier debugging
                 id++;
-                final String threadName = getServiceName() + "_entity_processing_thread_" + id + "_of_" + handledEntities.getSets().size();
+                final String threadName = getName() + "_entity_processing_thread_" + id + "_of_" + handledEntities.getSets().size();
                 processingThread.setName(threadName);
 
                 // Store thread for future access

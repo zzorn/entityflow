@@ -13,9 +13,9 @@ Timestepping
 
 Persistence
 * Support for serializing the state of the simulation to a stream, and reloading it
-* Event support, player input expressed as events.
-  * Events added to queues in entities, handled by Processors
-  * Events could also be used for some inter-entity control / messaging, when a processor can not simply access both entities?
+* [DONE] Event support, player input expressed as events.
+  * [DONE] Events added to queues in entities, handled by MessageHandlers
+  * [DONE] Events could also be used for some inter-entity control / messaging, when a processor can not simply access both entities?
 * Support for journaling serialization, save events and replay them from latest full backup to restore state.
 
 
@@ -59,3 +59,6 @@ Client - separate project
 * Client side editors?
 
 
+ControlInterface
+
+Terrain

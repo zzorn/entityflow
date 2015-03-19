@@ -46,7 +46,7 @@
         <dependency>
             <groupId>org.flowutils</groupId>
             <artifactId>flowutils</artifactId>
-            <version>0.1.20</version>
+            <version>0.1.56</version>
         </dependency>
 
         <!-- Object pool library -->

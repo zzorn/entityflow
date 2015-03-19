@@ -1,6 +1,5 @@
 package org.entityflow.entity;
 
-import org.flowutils.Check;
 
 /**
  * Used to store received messages while they are queued.

@@ -44,6 +44,7 @@ public interface Entity {
 
     /**
      * Removes the component of the specified base type from this entity.
+     * The removed component could be deleted or could be reused automatically.
      */
     <T extends Component> void remove(Class<T> type);
 

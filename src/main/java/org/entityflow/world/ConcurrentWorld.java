@@ -143,10 +143,6 @@ public class ConcurrentWorld extends WorldBase {
         setSimulationStepMilliseconds(simulationStepMilliseconds);
     }
 
-    public long getSimulationStepMilliseconds() {
-        return simulationStepMilliseconds;
-    }
-
     public PersistenceService getPersistenceService() {
         return persistenceService;
     }
@@ -154,7 +150,7 @@ public class ConcurrentWorld extends WorldBase {
     @Override
     public final <T extends Processor> T addProcessor(T processor) {
         Check.notContained(processor, processors, "processors");
-        if (initialized.get()) throw new IllegalStateException("addProcessor must be called before init is called.");
+        if (isInitialized()) throw new IllegalStateException("addProcessor must be called before init is called.");
 
         Class<? extends Processor> baseType = processor.getBaseType();
         if (processorLookup.containsKey(baseType)) throw new IllegalStateException("A processors using the base type '"+baseType+"' is already added!");
@@ -178,7 +174,7 @@ public class ConcurrentWorld extends WorldBase {
     public <T extends Message> MessageHandler<T> addMessageHandler(Class<T> handledMessageType,
                                                                    MessageHandler<T> messageHandler) {
         Check.notNull(messageHandler, "messageHandler");
-        if (initialized.get()) throw new IllegalStateException("addMessageHandler must be called before init is called.");
+        if (isInitialized()) throw new IllegalStateException("addMessageHandler must be called before init is called.");
 
         messageHandlerLookup.put(handledMessageType, messageHandler);
 
@@ -223,7 +219,7 @@ public class ConcurrentWorld extends WorldBase {
 
     @Override
     public void process() {
-        if (!initialized.get()) throw new IllegalStateException("World was not yet initialized, can not process world before init is called.");
+        if (!isInitialized()) throw new IllegalStateException("World was not yet initialized, can not process world before init is called.");
 
         refreshEntities();
 
@@ -259,12 +255,12 @@ public class ConcurrentWorld extends WorldBase {
             }
             else {
                 // Entity not found
-                logger.warn("No entity found for message " + addressedMessage + ", discarding message");
+                log.warn("No entity found for message " + addressedMessage + ", discarding message");
             }
         }
         else {
             // No message handler found
-            logger.warn("No message handler found for message " + addressedMessage + ", discarding message");
+            log.warn("No message handler found for message " + addressedMessage + ", discarding message");
         }
 
         // Release message container
@@ -328,19 +324,10 @@ public class ConcurrentWorld extends WorldBase {
         messageQueue.add(addressedMessage);
     }
 
-    @Override protected void doShutdown() {
-        if (initialized.get()) {
-            onShutdown();
-
-            // Shutdown in reverse order of initialization
-            for (int i = processors.size() - 1; i >= 0; i--) {
-                processors.get(i).shutdown();
-            }
-
-            initialized.set(false);
-        }
-        else {
-            throw new IllegalStateException("World was not initialized, can not shut down");
+    @Override protected void shutdownProcessors() {
+        // Shutdown in reverse order of initialization
+        for (int i = processors.size() - 1; i >= 0; i--) {
+            processors.get(i).shutdown();
         }
     }
 

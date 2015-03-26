@@ -1,44 +1,38 @@
 package org.entityflow.world;
 
 import org.flowutils.Check;
-import org.flowutils.LogUtils;
-import org.flowutils.time.RealTime;
+import org.flowutils.service.ServiceBase;
+import org.flowutils.service.ServiceProvider;
 import org.flowutils.time.Time;
-import org.slf4j.Logger;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.flowutils.Check.notNull;
 
 /**
  * Contains general code for a world.
  * Can be used as base class for various implementations.
  */
-public abstract class WorldBase implements World {
+public abstract class WorldBase extends ServiceBase implements World {
 
-    protected final AtomicBoolean initialized = new AtomicBoolean(false);
-    protected final AtomicBoolean running = new AtomicBoolean(false);
+    private final AtomicBoolean running = new AtomicBoolean(false);
+    private final AtomicBoolean invokeShutdownAfterStop = new AtomicBoolean(false);
 
-    protected long simulationStepMilliseconds;
+    private long simulationStepMilliseconds;
 
     // Handles game time
     private final Time time;
 
-    protected final Logger logger = LogUtils.getLogger();
-
     protected WorldBase(Time time) {
+        notNull(time, "time");
+
         this.time = time;
     }
 
-    @Override
-    public final void init() {
-        logger.info("Initializing.");
-
-        if (initialized.get()) throw new IllegalStateException("World was already initialized, can not initialize again");
-
+    @Override protected void doInit(ServiceProvider serviceProvider) {
         registerProcessors();
 
         initProcessors();
-
-        initialized.set(true);
 
         refreshEntities();
 
@@ -53,6 +47,14 @@ public abstract class WorldBase implements World {
         this.simulationStepMilliseconds = simulationStepMilliseconds;
     }
 
+    public long getSimulationStepMilliseconds() {
+        return simulationStepMilliseconds;
+    }
+
+    public boolean isRunning() {
+        return running.get();
+    }
+
     @Override
     public final void start(long simulationStepMilliseconds) {
         setSimulationStepMilliseconds(simulationStepMilliseconds);
@@ -62,12 +64,12 @@ public abstract class WorldBase implements World {
 
     @Override
     public final void start() {
-        logger.info("Starting.");
+        log.info("Starting.");
 
         running.set(true);
 
         // Initialize if needed
-        if (!initialized.get()) init();
+        if (!isInitialized()) init();
 
         // Main simulation loop
         // TODO: Better logic to timestepping
@@ -76,28 +78,38 @@ public abstract class WorldBase implements World {
 
             process();
 
-            try {
-                Thread.sleep(simulationStepMilliseconds);
-            } catch (InterruptedException e) {
-                // Ignore
-            }
+            // Pause for remaining time
+            time.delayMilliseconds(simulationStepMilliseconds - time.getMillisecondsSinceLastStep());
         }
 
-        // Shutdown everything
-        shutdown();
+        // Handle shutdown if the simulation loop was stopped by a call to shutdown
+        if (invokeShutdownAfterStop.get()) {
+            handleShutdown();
+            invokeShutdownAfterStop.set(false);
+        }
     }
 
-    @Override
-    public final void shutdown() {
+    @Override public final void stop() {
+        // Tell game loop to stop on the next round
+        running.set(false);
+    }
+
+    @Override protected void doShutdown() {
         if (running.get()) {
-            // Let game loop call us after the next loop is ready
-            running.set(false);
+            // Let game loop handle shutdown us after the next loop is ready
+            invokeShutdownAfterStop.set(true);
+            stop();
         }
         else {
-            logger.info("Shutting down.");
-            doShutdown();
+            handleShutdown();
         }
     }
+
+    private void handleShutdown() {
+        onShutdown();
+        shutdownProcessors();
+    }
+
 
     @Override public final Time getTime() {
         return time;
@@ -122,19 +134,19 @@ public abstract class WorldBase implements World {
     }
 
     /**
-     * Should call init for all added systems.
-     */
-    protected abstract void initProcessors();
-
-    /**
      * Should execute any pending additions and removals of entities, and handle entity additions / removals from
      * systems when the components making up an entity change.
      */
     protected abstract void refreshEntities();
 
     /**
-     * Should call onShutdown, and then shutdown for all systems.
+     * Should call init for all added systems.
      */
-    protected abstract void doShutdown();
+    protected abstract void initProcessors();
+
+    /**
+     * Should handle shutdown of the processors in the world.
+     */
+    protected abstract void shutdownProcessors();
 
 }

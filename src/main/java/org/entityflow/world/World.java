@@ -6,12 +6,13 @@ import org.entityflow.processors.MessageHandler;
 import org.entityflow.processors.Processor;
 import org.entityflow.component.Component;
 import org.entityflow.entity.Entity;
+import org.flowutils.service.Service;
 import org.flowutils.time.Time;
 
 /**
  * Manages all entities and systems in a game/simulation.
  */
-public interface World {
+public interface World extends Service {
 
     /**
      * Adds a processor.  Should be done before calling init.
@@ -50,6 +51,12 @@ public interface World {
      * If init has not been called, this will call init first.
      */
     void start(long simulationStepMilliseconds);
+
+    /**
+     * Stops the world simulation loop without calling shutdown.
+     * The world simulation loop started with a call to start() will return from that call after the current round is processed.
+     */
+    void stop();
 
     /**
      * Will stop the main game loop, and shut down all processors, after the next game loop is completed,

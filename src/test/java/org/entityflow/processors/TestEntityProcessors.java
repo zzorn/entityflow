@@ -59,7 +59,7 @@ public class TestEntityProcessors {
         world.process();
 
         final TestComponent testComponent3 = entity.get(TestComponent.class);
-        assertEquals("One tick should have been logged", 1, testComponent3.counter);
+        assertEquals("Two ticks should have been logged", 2, testComponent3.counter);
 
         // Test entity deleted
         final long id = entity.getId();
@@ -71,7 +71,7 @@ public class TestEntityProcessors {
         world.process();
 
         assertEquals(null, world.getEntity(id));
-        assertEquals(1, testComponent.counter);
+        assertEquals(2, testComponent.counter);
 
         // Test recreate (should use pooled entity)
         final Entity entity2 = world.createEntity(new TestComponent());
@@ -209,7 +209,7 @@ public class TestEntityProcessors {
         ConcurrentWorld world = new ConcurrentWorld(worldTime, new TestPersistence());
 
         // Add a processor
-        final TestProcessor testProcessor = new TestProcessor(concurrentProcessing, 0.99, entityUpdateHeaviness);
+        final TestProcessor testProcessor = new TestProcessor(concurrentProcessing, 1, entityUpdateHeaviness);
         world.addProcessor(testProcessor);
 
         // Initialize world

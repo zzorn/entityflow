@@ -5,6 +5,7 @@ import org.entityflow.component.Component;
 import org.entityflow.entity.Entity;
 import org.entityflow.utils.BalancingCompositeSetMutator;
 import org.flowutils.service.ServiceProvider;
+import org.flowutils.time.ManualTime;
 import org.flowutils.time.Time;
 
 import java.util.*;
@@ -178,6 +179,7 @@ public abstract class EntityProcessorBase extends ProcessorBase {
 
     protected final void processSequentially() {
         // Just process all entities one at a time
+        final Time time = getTime();
         for (Entity handledEntity : handledEntities) {
             processEntity(time, handledEntity);
         }
@@ -349,6 +351,7 @@ public abstract class EntityProcessorBase extends ProcessorBase {
                 if (!waitAtBarrier(processingStartBarrier)) return;
 
                 // Process the specified set of entities
+                final Time time = getTime();
                 for (Entity entity : entitiesToProcess) {
                     processEntity(time, entity);
                 }

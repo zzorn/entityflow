@@ -53,6 +53,19 @@ public interface World extends Service {
     void start(long simulationStepMilliseconds);
 
     /**
+     * Runs one world update step.
+     * (Advances time and processes entities).
+     */
+    void update();
+
+    /**
+     * Add and delete any recently added/removed entities, then call process for each Processor, in the order they were added,
+     * letting them process the entities they are interested in.
+     * Does not update the game time.
+     */
+    void process();
+
+    /**
      * Stops the world simulation loop without calling shutdown.
      * The world simulation loop started with a call to start() will return from that call after the current round is processed.
      */
@@ -63,12 +76,6 @@ public interface World extends Service {
      * or do the shutdown immediately if the game loop was not started.
      */
     void shutdown();
-
-    /**
-     * Add and delete any recently added/removed entities, then call process for each Processor, in the order they were added,
-     * letting them process the entities they are interested in.
-     */
-    void process();
 
     /**
      * @param entityId the id of the entity to get.

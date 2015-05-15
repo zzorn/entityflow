@@ -87,10 +87,7 @@ public abstract class WorldBase extends ServiceBase implements World {
         }
     }
 
-    /**
-     * Runs one world update step
-     */
-    public final void update() {
+    @Override public final void update() {
         time.nextStep();
         process();
     }

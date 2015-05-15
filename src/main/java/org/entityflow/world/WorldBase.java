@@ -74,9 +74,7 @@ public abstract class WorldBase extends ServiceBase implements World {
         // Main simulation loop
         // TODO: Better logic to timestepping
         while(running.get()) {
-            time.nextStep();
-
-            process();
+            update();
 
             // Pause for remaining time
             time.delayMilliseconds(simulationStepMilliseconds - time.getMillisecondsSinceLastStep());
@@ -87,6 +85,14 @@ public abstract class WorldBase extends ServiceBase implements World {
             handleShutdown();
             invokeShutdownAfterStop.set(false);
         }
+    }
+
+    /**
+     * Runs one world update step
+     */
+    public final void update() {
+        time.nextStep();
+        process();
     }
 
     @Override public final void stop() {

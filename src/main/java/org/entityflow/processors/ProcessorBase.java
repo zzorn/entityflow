@@ -100,23 +100,7 @@ public abstract class ProcessorBase extends ServiceBase implements Processor {
     }
 
     /**
-     * @return if fixedTimeStep is true, this tells how many time steps we can advance at most on one call.
-     * If it is false, this is not used.
-     */
-    public final int getMaxTimeStepsToAdvance() {
-        return maxTimeStepsToAdvance;
-    }
-
-    /**
-     * @param maxTimeStepsToAdvance if fixedTimeStep is true, this tells how many time steps we can advance at most on one call.
-     * If it is false, this is not used.
-     */
-    public final void setMaxTimeStepsToAdvance(int maxTimeStepsToAdvance) {
-        this.maxTimeStepsToAdvance = maxTimeStepsToAdvance;
-    }
-
-    /**
-     * @return if true, simulation steps will be discarded if more than maxTimeStepsToAdvance remains after an update.
+     * @return if true, simulation steps will be discarded if more than maxTimeStepsToAdvance would be needed during an update.
      *         When true, the simulation will run slower but not freeze the computer if the processing is slow,
      *         but the simulation will not be deterministic (re-running it with the same start state will result in different states).
      *         If false, the simulation will run slower and the machine will run slower, but the simulation will be deterministic.
@@ -126,12 +110,28 @@ public abstract class ProcessorBase extends ServiceBase implements Processor {
     }
 
     /**
-     * @param discardSimulationStepsWhenProcessorOverworked if true, simulation steps will be discarded if more than maxTimeStepsToAdvance remains after an update.
+     * @param discardSimulationStepsWhenProcessorOverworked if true, simulation steps will be discarded if more than maxTimeStepsToAdvance would be needed during an update.
      *         When true, the simulation will run slower but not freeze the computer if the processing is slow,
      *         but the simulation will not be deterministic (re-running it with the same start state will result in different states).
      *         If false, the simulation will run slower and the machine will run slower, but the simulation will be deterministic.     */
     public final void setDiscardSimulationStepsWhenProcessorOverworked(boolean discardSimulationStepsWhenProcessorOverworked) {
         this.discardSimulationStepsWhenProcessorOverworked = discardSimulationStepsWhenProcessorOverworked;
+    }
+
+    /**
+     * @return if fixedTimeStep and discardSimulationStepsWhenProcessorOverworked is true,
+     *         this tells how many time steps we can advance at most on one call.  Otherwise, this is not used.
+     */
+    public final int getMaxTimeStepsToAdvance() {
+        return maxTimeStepsToAdvance;
+    }
+
+    /**
+     * @param maxTimeStepsToAdvance if fixedTimeStep and discardSimulationStepsWhenProcessorOverworked is true,
+     *         this tells how many time steps we can advance at most on one call.  Otherwise, this is not used.
+     */
+    public final void setMaxTimeStepsToAdvance(int maxTimeStepsToAdvance) {
+        this.maxTimeStepsToAdvance = maxTimeStepsToAdvance;
     }
 
     @Override
@@ -163,20 +163,14 @@ public abstract class ProcessorBase extends ServiceBase implements Processor {
 
             long steps = millisecondsToAdvance / processingIntervalMilliseconds;
 
-            // Clamp number of steps to do
-            if (steps > maxTimeStepsToAdvance) {
+            // Clamp number of steps to do, if we should discardSimulationStepsWhenProcessorOverworked
+            if (discardSimulationStepsWhenProcessorOverworked && steps > maxTimeStepsToAdvance) {
+                // Clamp the excess steps, so that simulation speed is limited if we run out of processing power, instead of bogging down the system
+                // This will hoverer lead to non-deterministic simulations (loading a state and stepping forward will not always result in the same situation)
                 steps = maxTimeStepsToAdvance;
             }
 
             excessMillisecondsFromLastStep = millisecondsToAdvance - steps * processingIntervalMilliseconds;
-
-            if (discardSimulationStepsWhenProcessorOverworked) {
-                // Clamp the excess time, so that simulation speed is limited if we run out of processing power, instead of bogging down the system
-                // This will hoverer lead to non-deterministic simulations (loading a state and stepping forward will not always result in the same situation)
-                final long maxExcessTime = maxTimeStepsToAdvance * processingIntervalMilliseconds;
-                if (excessMillisecondsFromLastStep < 0) excessMillisecondsFromLastStep = 0;
-                else if (excessMillisecondsFromLastStep > maxExcessTime) excessMillisecondsFromLastStep = maxExcessTime;
-            }
 
             // Process the steps
             for (int i = 0; i < steps; i++) {

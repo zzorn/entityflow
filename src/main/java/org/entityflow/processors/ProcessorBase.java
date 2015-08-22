@@ -12,6 +12,7 @@ import org.flowutils.time.Time;
 /**
  * Base class for processor implementations, does not do any entity management.
  */
+// IDEA: Refactor processing update strategy to enum or external strategy
 public abstract class ProcessorBase extends ServiceBase implements Processor {
 
     private final Class<? extends Processor> baseType;
@@ -67,7 +68,7 @@ public abstract class ProcessorBase extends ServiceBase implements Processor {
     }
 
     public final void setProcessingIntervalMilliseconds(long processingIntervalMilliseconds) {
-        Check.positive(processingIntervalMilliseconds, "processingIntervalMilliseconds");
+        Check.positiveOrZero(processingIntervalMilliseconds, "processingIntervalMilliseconds");
 
         this.processingIntervalMilliseconds = processingIntervalMilliseconds;
     }
@@ -157,38 +158,44 @@ public abstract class ProcessorBase extends ServiceBase implements Processor {
 
     @Override
     public final void process(Time worldTime) {
-
-        if (fixedTimeStep) {
-            long millisecondsToAdvance = worldTime.getLastStepDurationMs() + excessMillisecondsFromLastStep;
-
-            long steps = millisecondsToAdvance / processingIntervalMilliseconds;
-
-            // Clamp number of steps to do, if we should discardSimulationStepsWhenProcessorOverworked
-            if (discardSimulationStepsWhenProcessorOverworked && steps > maxTimeStepsToAdvance) {
-                // Clamp the excess steps, so that simulation speed is limited if we run out of processing power, instead of bogging down the system
-                // This will hoverer lead to non-deterministic simulations (loading a state and stepping forward will not always result in the same situation)
-                steps = maxTimeStepsToAdvance;
-            }
-
-            excessMillisecondsFromLastStep = millisecondsToAdvance - steps * processingIntervalMilliseconds;
-
-            // Process the steps
-            for (int i = 0; i < steps; i++) {
-                time.advanceTime(processingIntervalMilliseconds);
-                doProcess(time);
-                time.nextStep();
-            }
+        if (processingIntervalMilliseconds <= 0) {
+            // Process every time process is called
+            time.advanceTime(worldTime.getLastStepDurationMs());
+            doProcess(time);
         }
         else {
-            // Variable timestep
+            if (fixedTimeStep) {
+                long millisecondsToAdvance = worldTime.getLastStepDurationMs() + excessMillisecondsFromLastStep;
 
-            // Update own time with world time
-            time.advanceTime(worldTime.getLastStepDurationMs());
+                long steps = millisecondsToAdvance / processingIntervalMilliseconds;
 
-            // Do normal processing if enough time has passed since the last time
-            if (time.getMillisecondsSinceLastStep() >= processingIntervalMilliseconds) {
-                doProcess(time);
-                time.nextStep();
+                // Clamp number of steps to do, if we should discardSimulationStepsWhenProcessorOverworked
+                if (discardSimulationStepsWhenProcessorOverworked && steps > maxTimeStepsToAdvance) {
+                    // Clamp the excess steps, so that simulation speed is limited if we run out of processing power, instead of bogging down the system
+                    // This will hoverer lead to non-deterministic simulations (loading a state and stepping forward will not always result in the same situation)
+                    steps = maxTimeStepsToAdvance;
+                }
+
+                excessMillisecondsFromLastStep = millisecondsToAdvance - steps * processingIntervalMilliseconds;
+
+                // Process the steps
+                for (int i = 0; i < steps; i++) {
+                    time.advanceTime(processingIntervalMilliseconds);
+                    doProcess(time);
+                    time.nextStep();
+                }
+            }
+            else {
+                // Variable timestep
+
+                // Update own time with world time
+                time.advanceTime(worldTime.getLastStepDurationMs());
+
+                // Do normal processing if enough time has passed since the last time
+                if (time.getMillisecondsSinceLastStep() >= processingIntervalMilliseconds) {
+                    doProcess(time);
+                    time.nextStep();
+                }
             }
         }
     }

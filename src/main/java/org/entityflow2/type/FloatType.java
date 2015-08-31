@@ -1,4 +1,4 @@
-package org.entityflow2;
+package org.entityflow2.type;
 
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
@@ -17,7 +17,7 @@ public final class FloatType<T> implements Type<Float> {
     };
 
     @Override
-    public Class<Float> getType() {
+    public Class<Float> getValueClass() {
         return Float.class;
     }
 

@@ -1,6 +1,4 @@
-package org.entityflow2;
-
-import java.nio.ByteBuffer;
+package org.entityflow2.component;
 
 /**
  *

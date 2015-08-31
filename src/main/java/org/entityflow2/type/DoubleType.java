@@ -1,4 +1,4 @@
-package org.entityflow2;
+package org.entityflow2.type;
 
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
@@ -17,7 +17,7 @@ public final class DoubleType<T> implements Type<Double> {
     };
 
     @Override
-    public Class<Double> getType() {
+    public Class<Double> getValueClass() {
         return Double.class;
     }
 

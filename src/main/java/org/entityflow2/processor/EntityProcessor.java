@@ -1,4 +1,4 @@
-package org.entityflow2;
+package org.entityflow2.processor;
 
 import org.flowutils.time.Time;
 

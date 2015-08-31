@@ -71,6 +71,18 @@
             <version>4.0</version>
         </dependency>
 
+        <!-- Faster primitive collections -->
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>koloboke-api-jdk6-7</artifactId>
+            <version>0.6.7</version>
+        </dependency>
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>koloboke-impl-jdk6-7</artifactId>
+            <version>0.6.7</version>
+        </dependency>
+
     </dependencies>
 
 

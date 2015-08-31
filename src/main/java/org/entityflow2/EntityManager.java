@@ -7,6 +7,7 @@ import org.flowutils.time.Time;
  */
 public interface EntityManager {
 
+
     void registerComponentType();
 
     void registerProcessor();

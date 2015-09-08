@@ -7,7 +7,9 @@ import java.text.NumberFormat;
 /**
  *
  */
-public final class FloatType<T> implements Type<Float> {
+public final class FloatType implements Type<Float> {
+
+    public static final FloatType TYPE = new FloatType();
 
     private final ThreadLocal<NumberFormat> format = new ThreadLocal<NumberFormat>() {
         @Override
@@ -21,8 +23,16 @@ public final class FloatType<T> implements Type<Float> {
         return Float.class;
     }
 
+    @Override public int getDataLengthBytes() {
+        return 4;
+    }
+
+    @Override public boolean isByteBufferStorable() {
+        return true;
+    }
+
     @Override
-    public Float readValue(final ByteBuffer buffer, final int offset) {
+    public Float readValue(final ByteBuffer buffer, final int offset, Float out) {
         return readFloatValue(buffer, offset);
     }
 

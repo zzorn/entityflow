@@ -12,6 +12,7 @@ public final class FloatRange implements Range<Float> {
     public static final FloatRange ZERO_TO_ONE = new FloatRange(0, 1);
     public static final FloatRange MINUS_ONE_TO_ONE = new FloatRange(-1, 1);
     public static final FloatRange ZERO_OR_LARGER = new FloatRange(0, Float.POSITIVE_INFINITY);
+    public static final FloatRange ONE_OR_LARGER = new FloatRange(1, Float.POSITIVE_INFINITY);
 
     public FloatRange() {
         this(Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY);

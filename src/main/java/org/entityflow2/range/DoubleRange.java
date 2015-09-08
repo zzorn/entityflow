@@ -12,6 +12,7 @@ public final class DoubleRange implements Range<Double> {
     public static final DoubleRange ZERO_TO_ONE = new DoubleRange(0, 1);
     public static final DoubleRange MINUS_ONE_TO_ONE = new DoubleRange(-1, 1);
     public static final DoubleRange ZERO_OR_LARGER = new DoubleRange(0, Double.POSITIVE_INFINITY);
+    public static final DoubleRange ONE_OR_LARGER = new DoubleRange(1, Double.POSITIVE_INFINITY);
 
     public DoubleRange() {
         this(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);

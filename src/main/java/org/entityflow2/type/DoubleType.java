@@ -7,7 +7,9 @@ import java.text.NumberFormat;
 /**
  *
  */
-public final class DoubleType<T> implements Type<Double> {
+public final class DoubleType implements Type<Double> {
+
+    public static final DoubleType TYPE = new DoubleType();
 
     private final ThreadLocal<NumberFormat> format = new ThreadLocal<NumberFormat>() {
         @Override
@@ -21,8 +23,16 @@ public final class DoubleType<T> implements Type<Double> {
         return Double.class;
     }
 
+    @Override public int getDataLengthBytes() {
+        return 8;
+    }
+
+    @Override public boolean isByteBufferStorable() {
+        return true;
+    }
+
     @Override
-    public Double readValue(final ByteBuffer buffer, final int offset) {
+    public Double readValue(final ByteBuffer buffer, final int offset, Double out) {
         return readDoubleValue(buffer, offset);
     }
 

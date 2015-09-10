@@ -1,4 +1,7 @@
-package org.entityflow2;
+package org.entityflow2.example;
+
+import org.entityflow2.ConcurrentEntityManager;
+import org.entityflow2.EntityManager;
 
 /**
  *

@@ -1,4 +1,4 @@
-package org.entityflow2;
+package org.entityflow2.example;
 
 import org.flowutils.Check;
 import org.flowutils.Symbol;

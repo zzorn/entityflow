@@ -1,4 +1,4 @@
-package org.entityflow2;
+package org.entityflow2.example;
 
 import org.entityflow2.component.ComponentType;
 import org.entityflow2.component.DoubleProperty;

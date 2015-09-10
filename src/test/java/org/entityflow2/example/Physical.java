@@ -1,11 +1,9 @@
-package org.entityflow2;
+package org.entityflow2.example;
 
 import org.entityflow2.component.ComponentType;
 import org.entityflow2.component.DoubleProperty;
 import org.entityflow2.component.Property;
 import org.entityflow2.range.DoubleRange;
-import org.entityflow2.type.ComplexTypeBase;
-import org.entityflow2.type.Type;
 
 /**
  *

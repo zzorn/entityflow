@@ -1,5 +1,6 @@
-package org.entityflow2;
+package org.entityflow2.example;
 
+import org.entityflow2.EntityManager;
 import org.entityflow2.component.Property;
 import org.entityflow2.processor.Processor;
 import org.entityflow2.processor.ProcessorBase;

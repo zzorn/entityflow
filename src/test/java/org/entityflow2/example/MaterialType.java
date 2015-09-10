@@ -1,12 +1,6 @@
-package org.entityflow2;
+package org.entityflow2.example;
 
 import org.entityflow2.type.ComplexTypeBase;
-import org.flowutils.Symbol;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.flowutils.Check.notNull;
 
 /**
  *

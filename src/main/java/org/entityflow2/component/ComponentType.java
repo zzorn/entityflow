@@ -111,7 +111,7 @@ public class ComponentType {
      * Adds an integer property with unlimited range to this component type.
      * Typically called from the constructor of a descendant ComponentType.
      *
-     * Note that this method is not thread safe (but getters and setters for property values generally are).
+     * Must be called before this ComponentType is applied to any entity.
      *
      * @param id unique id of the property within this component type.
      * @param defaultValue default value for the property.
@@ -125,7 +125,7 @@ public class ComponentType {
      * Adds a float property with unlimited range to this component type.
      * Typically called from the constructor of a descendant ComponentType.
      *
-     * Note that this method is not thread safe (but getters and setters for property values generally are).
+     * Must be called before this ComponentType is applied to any entity.
      *
      * @param id unique id of the property within this component type.
      * @param defaultValue default value for the property.
@@ -139,7 +139,7 @@ public class ComponentType {
      * Adds an double property with unlimited range to this component type.
      * Typically called from the constructor of a descendant ComponentType.
      *
-     * Note that this method is not thread safe (but getters and setters for property values generally are).
+     * Must be called before this ComponentType is applied to any entity.
      *
      * @param id unique id of the property within this component type.
      * @param defaultValue default value for the property.
@@ -153,7 +153,7 @@ public class ComponentType {
      * Adds an integer property to this component type.
      * Typically called from the constructor of a descendant ComponentType.
      *
-     * Note that this method is not thread safe (but getters and setters for property values generally are).
+     * Must be called before this ComponentType is applied to any entity.
      *
      * @param id unique id of the property within this component type.
      * @param defaultValue default value for the property.
@@ -168,7 +168,7 @@ public class ComponentType {
      * Adds a float property to this component type.
      * Typically called from the constructor of a descendant ComponentType.
      *
-     * Note that this method is not thread safe (but getters and setters for property values generally are).
+     * Must be called before this ComponentType is applied to any entity.
      *
      * @param id unique id of the property within this component type.
      * @param defaultValue default value for the property.
@@ -183,7 +183,7 @@ public class ComponentType {
      * Adds a double property to this component type.
      * Typically called from the constructor of a descendant ComponentType.
      *
-     * Note that this method is not thread safe (but getters and setters for property values generally are).
+     * Must be called before this ComponentType is applied to any entity.
      *
      * @param id unique id of the property within this component type.
      * @param defaultValue default value for the property.
@@ -198,7 +198,7 @@ public class ComponentType {
      * Adds a property to this component type with no restrictions on the value range.
      * Typically called from the constructor of a descendant ComponentType.
      *
-     * Note that this method is not thread safe (but getters and setters for property values generally are).
+     * Must be called before this ComponentType is applied to any entity.
      *
      * @param id unique id of the property within this component type.
      * @param defaultValue default value for the property.
@@ -213,7 +213,7 @@ public class ComponentType {
      * Adds a property to this component type.
      * Typically called from the constructor of a descendant ComponentType.
      *
-     * Note that this method is not thread safe (but getters and setters for property values generally are).
+     * Must be called before this ComponentType is applied to any entity.
      *
      * @param id unique id of the property within this component type.
      * @param defaultValue default value for the property.
@@ -449,6 +449,7 @@ public class ComponentType {
 
     private int findComponentIndexForNewEntity(int entityId) {
         // NOTE: This is a linear search, if the data is tightly packed, a binary search can be more efficient.
+        // We start from the end, as typically components are added to entities in order of increasing entity id.
         for (int componentIndex = maxComponentIndex; componentIndex >= 0; componentIndex--) {
             final int entityIdAtComponentIndex = dataBuffer.getInt(componentIndex * (BLOCK_HEADER_SIZE + dataBlockSize));
 

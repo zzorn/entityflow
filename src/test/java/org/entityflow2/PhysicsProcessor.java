@@ -17,7 +17,7 @@ public class PhysicsProcessor extends ProcessorBase {
         // Get entities with handled components
 
 
-
+        // TODO: Implement base classes etc
     }
 
     @Override public void shutdown(EntityManager entityManager) {

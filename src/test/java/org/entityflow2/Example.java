@@ -22,6 +22,7 @@ public class Example {
         position.y.set(entity, 43);
         position.z.set(entity, -20.1);
         physical.mass.set(entity, 4.1);
+        physical.material.set(entity, Material.getMaterial("wood"));
 
     }
 

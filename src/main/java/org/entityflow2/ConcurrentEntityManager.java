@@ -24,6 +24,7 @@ import static org.flowutils.Check.notNull;
 /**
  *
  */
+// TODO: Add UpdateStrategy
 public final class ConcurrentEntityManager extends ServiceBase implements EntityManager {
 
     private static final int EXPECTED_ENTITY_COUNT = 100000;
@@ -64,6 +65,9 @@ public final class ConcurrentEntityManager extends ServiceBase implements Entity
 
         processors.add(processor);
         processor.setEntityManager(this);
+
+        // Initialize the processor if the EntityManager is already initialized.
+        if (isInitialized()) processor.init(this);
 
         return processor;
     }

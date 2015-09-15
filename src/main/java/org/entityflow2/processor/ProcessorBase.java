@@ -5,7 +5,7 @@ import org.entityflow2.EntityManager;
 import static org.flowutils.Check.notNull;
 
 /**
- *
+ * Some common functionality for Processors.
  */
 public abstract class ProcessorBase implements Processor {
 

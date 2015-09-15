@@ -5,38 +5,13 @@ import org.flowutils.time.Time;
 /**
  * Common functionality for UpdateStrategies.
  */
-public abstract class UpdateStrategyBase<T extends Updating> implements UpdateStrategy<T> {
+public abstract class UpdateStrategyBase implements UpdateStrategy {
 
-    private T simulation;
-
-    public UpdateStrategyBase() {
-        this(null);
-    }
-
-    public UpdateStrategyBase(T simulation) {
-        setSimulation(simulation);
-    }
-
-    @Override public final void setSimulation(T simulation) {
-        this.simulation = simulation;
-    }
-
-    @Override public final T getSimulation() {
-        return simulation;
-    }
-
-    @Override public final void updateSimulation(T simulation, Time externalTime) {
+    @Override public void update(Updating simulation, Time externalTime) {
         if (simulation != null) {
-            update(simulation, externalTime);
+            doUpdate(simulation, externalTime);
         }
     }
 
-    @Override public final void update(Time externalTime) {
-        final T simulation = this.simulation;
-        if (simulation != null) {
-            update(simulation, externalTime);
-        }
-    }
-
-    protected abstract void update(T simulation, Time externalTime);
+    protected abstract void doUpdate(Updating simulation, Time externalTime);
 }

@@ -1,6 +1,5 @@
 package org.entityflow2.utils;
 
-import org.flowutils.time.ManualTime;
 import org.flowutils.time.Time;
 
 /**
@@ -11,16 +10,9 @@ import org.flowutils.time.Time;
  *
  * It is not very suitable for most physics simulations, but will suffice well for non-time sensitive things.
  */
-public final class VariableTimestepStrategy<T extends Updating> extends UpdateStrategyBase<T> {
+public final class VariableTimestepStrategy extends UpdateStrategyBase {
 
-    public VariableTimestepStrategy() {
-    }
-
-    public VariableTimestepStrategy(T simulation) {
-        super(simulation);
-    }
-
-    @Override protected void update(T simulation, Time externalTime) {
+    @Override protected void doUpdate(Updating simulation, Time externalTime) {
         simulation.update(externalTime);
     }
 

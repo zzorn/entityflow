@@ -3,29 +3,19 @@ package org.entityflow2.utils;
 import org.flowutils.time.Time;
 
 /**
- * Encapsulates some update over time strategy.
+ * Encapsulates some update over time.
+ *
+ * Note that this strategy may store state information related to things like timesteps,
+ * so it should only be used to update one simulation.
  */
-public interface UpdateStrategy<T extends Updating> extends Updating {
+public interface UpdateStrategy {
 
     /**
-     * @param simulation the thing that should be updated by this UpdateStrategy.
-     */
-    void setSimulation(T simulation);
-
-    /**
-     * @return the thing being updated by this UpdateStrategy.
-     */
-    T getSimulation();
-
-    /**
-     * Alternative way to use the UpdateStrategy, instead of setting the simulation property of the UpdateStrategy,
-     * it will update the provided simulation.
-     *
-     * Note that the UpdateStrategy still has one common state for all simulations, so this can not be used to update different simulations.
+     * Updates the specified simulation with the specified time, using this UpdateStrategy.
      *
      * @param simulation simulation to update.
      * @param externalTime time to use when updating.
      */
-    void updateSimulation(T simulation, Time externalTime);
+    void update(Updating simulation, Time externalTime);
 
 }

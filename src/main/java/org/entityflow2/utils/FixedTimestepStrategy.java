@@ -16,7 +16,7 @@ import org.flowutils.time.Time;
 // TODO: Convert this to use milliseconds as timestep unit,
 // TODO  or change Time to keep track of the elapsed time with seconds & doubles instead of milliseconds & longs.
 // TODO: If Time is not changed, at least add a method to get the smallest possible timestep in seconds.
-public final class FixedTimestepStrategy<T extends Updating> extends UpdateStrategyWithLocalTimeBase<T> {
+public final class FixedTimestepStrategy extends UpdateStrategyWithLocalTimeBase {
 
     private static final double DEFAULT_TIMESTEP_SECONDS = 0.01;
     private static final double MINIMUM_TIMESTEP = 0.001;
@@ -36,16 +36,6 @@ public final class FixedTimestepStrategy<T extends Updating> extends UpdateStrat
      * @param timestepSeconds the time in seconds between update calls to the simulation.
      */
     public FixedTimestepStrategy(double timestepSeconds) {
-        this(timestepSeconds, null);
-    }
-
-    /**
-     * @param timestepSeconds the time in seconds between update calls to the simulation.
-     * @param simulation simulation to update.
-     */
-    public FixedTimestepStrategy(double timestepSeconds, T simulation) {
-        super(simulation);
-
         setTimestepSeconds(timestepSeconds);
     }
 
@@ -68,7 +58,7 @@ public final class FixedTimestepStrategy<T extends Updating> extends UpdateStrat
         this.timestepSeconds = timestepSeconds;
     }
 
-    @Override protected void update(T simulation, ManualTime localTime, Time externalTime) {
+    @Override protected void doUpdate(Updating simulation, ManualTime localTime, Time externalTime) {
         // Add elapsed time since the last update call to the backlog
         timeSinceLastUpdateCall_seconds += externalTime.getLastStepDurationSeconds();
 

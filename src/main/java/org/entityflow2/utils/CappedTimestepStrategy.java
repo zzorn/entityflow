@@ -10,7 +10,7 @@ import org.flowutils.time.Time;
  * This helps limit physics and other artifacts in case the application experiences lag spikes or slowness
  * (e.g. caused by temporary system overload due to unrelated things, or things like disk io).
  */
-public final class CappedTimestepStrategy<T extends Updating> extends UpdateStrategyWithLocalTimeBase<T> {
+public final class CappedTimestepStrategy extends UpdateStrategyWithLocalTimeBase {
 
     private long maximumStepDuration_milliseconds;
 
@@ -26,17 +26,7 @@ public final class CappedTimestepStrategy<T extends Updating> extends UpdateStra
      * @param maximumStepDuration_milliseconds maximum allowed update duration in milliseconds.  If an update would be slower, the time is capped to this value.
      */
     public CappedTimestepStrategy(long maximumStepDuration_milliseconds) {
-        this.maximumStepDuration_milliseconds = maximumStepDuration_milliseconds;
-    }
-
-    /**
-     * @param maximumStepDuration_milliseconds maximum allowed update duration in milliseconds.  If an update would be slower, the time is capped to this value.
-     * @param simulation simulation to update.
-     */
-    public CappedTimestepStrategy(long maximumStepDuration_milliseconds,
-                                  T simulation) {
-        super(simulation);
-        this.maximumStepDuration_milliseconds = maximumStepDuration_milliseconds;
+        setMaximumStepDuration_milliseconds(maximumStepDuration_milliseconds);
     }
 
     /**
@@ -54,7 +44,7 @@ public final class CappedTimestepStrategy<T extends Updating> extends UpdateStra
         this.maximumStepDuration_milliseconds = maximumStepDuration_milliseconds;
     }
 
-    @Override protected void update(T simulation, ManualTime localTime, Time externalTime) {
+    @Override protected void doUpdate(Updating simulation, ManualTime localTime, Time externalTime) {
 
         // Cap the elapsed time
         final long elapsedTime_ms = Math.min(maximumStepDuration_milliseconds, externalTime.getLastStepDurationMs());

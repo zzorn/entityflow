@@ -160,12 +160,12 @@ public abstract class ProcessorBase extends ServiceBase implements Processor {
     public final void process(Time worldTime) {
         if (processingIntervalMilliseconds <= 0) {
             // Process every time process is called
-            time.advanceTime(worldTime.getLastStepDurationMs());
+            time.advanceTimeSeconds(worldTime.getLastStepDurationSeconds());
             doProcess(time);
         }
         else {
             if (fixedTimeStep) {
-                long millisecondsToAdvance = worldTime.getLastStepDurationMs() + excessMillisecondsFromLastStep;
+                long millisecondsToAdvance = worldTime.getLastStepDurationMilliseconds() + excessMillisecondsFromLastStep;
 
                 long steps = millisecondsToAdvance / processingIntervalMilliseconds;
 
@@ -180,7 +180,7 @@ public abstract class ProcessorBase extends ServiceBase implements Processor {
 
                 // Process the steps
                 for (int i = 0; i < steps; i++) {
-                    time.advanceTime(processingIntervalMilliseconds);
+                    time.advanceTimeMilliseconds(processingIntervalMilliseconds);
                     doProcess(time);
                     time.nextStep();
                 }
@@ -189,7 +189,7 @@ public abstract class ProcessorBase extends ServiceBase implements Processor {
                 // Variable timestep
 
                 // Update own time with world time
-                time.advanceTime(worldTime.getLastStepDurationMs());
+                time.advanceTimeSeconds(worldTime.getLastStepDurationSeconds());
 
                 // Do normal processing if enough time has passed since the last time
                 if (time.getMillisecondsSinceLastStep() >= processingIntervalMilliseconds) {

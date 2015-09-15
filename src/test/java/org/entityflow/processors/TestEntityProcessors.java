@@ -54,7 +54,7 @@ public class TestEntityProcessors {
         final TestComponent testComponent2 = entity.get(TestComponent.class);
         assertEquals("No tick should have been logged", 0, testComponent2.counter);
 
-        worldTime.advanceTime(2500);
+        worldTime.advanceTimeMilliseconds(2500);
         worldTime.nextStep();
         world.process();
 
@@ -66,7 +66,7 @@ public class TestEntityProcessors {
         assertEquals(entity, world.getEntity(id));
         world.deleteEntity(entity);
 
-        worldTime.advanceTime(2500);
+        worldTime.advanceTimeMilliseconds(2500);
         worldTime.nextStep();
         world.process();
 
@@ -227,7 +227,7 @@ public class TestEntityProcessors {
         // Simulate
         for (int i = 0; i < simulationLoops; i++) {
             // Simulate
-            worldTime.advanceTime(1000);
+            worldTime.advanceTimeMilliseconds(1000);
             worldTime.nextStep();
             world.process();
 

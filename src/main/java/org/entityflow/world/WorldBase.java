@@ -1,6 +1,7 @@
 package org.entityflow.world;
 
 import org.flowutils.Check;
+import org.flowutils.TimeUtils;
 import org.flowutils.service.ServiceBase;
 import org.flowutils.service.ServiceProvider;
 import org.flowutils.time.Time;
@@ -77,7 +78,7 @@ public abstract class WorldBase extends ServiceBase implements World {
             update();
 
             // Pause for remaining time
-            time.delayMilliseconds(simulationStepMilliseconds - time.getMillisecondsSinceLastStep());
+            TimeUtils.delay(simulationStepMilliseconds - time.getMillisecondsSinceLastStep());
         }
 
         // Handle shutdown if the simulation loop was stopped by a call to shutdown

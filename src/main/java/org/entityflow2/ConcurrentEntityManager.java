@@ -26,7 +26,8 @@ import static org.flowutils.Check.notNull;
 /**
  *
  */
-// TODO: Add UpdateStrategy
+// TODO: Fix deletion
+// TODO: Implement concurrency
 public final class ConcurrentEntityManager extends ServiceBase implements EntityManager {
 
     private static final int EXPECTED_ENTITY_COUNT = 100000;

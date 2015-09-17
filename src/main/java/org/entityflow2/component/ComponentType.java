@@ -32,8 +32,8 @@ public class ComponentType {
     private final Symbol id;
     private boolean inUse = false;
 
-    private Property[] properties = new Property[0];
-    private final ObjObjMap<Symbol, Property> propertiesLookup = HashObjObjMaps.getDefaultFactory()
+    private PropertyBase[] properties = new PropertyBase[0];
+    private final ObjObjMap<Symbol, PropertyBase> propertiesLookup = HashObjObjMaps.getDefaultFactory()
                                                                                .withKeyEquivalence(Equivalence.identity())
                                                                                .withNullKeyAllowed(false)
                                                                                .newMutableMap();
@@ -105,6 +105,13 @@ public class ComponentType {
      */
     public final int getComponentCount() {
         return componentCount;
+    }
+
+    /**
+     * @return maximum component index that contains a component.
+     */
+    public final int getMaxComponentIndex() {
+        return maxComponentIndex;
     }
 
     /**
@@ -225,7 +232,7 @@ public class ComponentType {
         return addProperty(new Property<T>(Symbol.get(id), this, defaultValue, type, range));
     }
 
-    private <T extends Property> T addProperty(T property) {
+    private <T extends PropertyBase> T addProperty(T property) {
 
         // Check if we can still add properties
         if (inUse) throw new IllegalStateException("Can not add a property anymore after a component of this type has been added to an entity");
@@ -291,6 +298,20 @@ public class ComponentType {
         return componentIndex * (dataBlockSize + BLOCK_HEADER_SIZE) + BLOCK_HEADER_SIZE;
     }
 
+    /**
+     * @param componentIndex component index to get entity id for.  Ranges from 0 to getMaxComponentIndex() (inclusive).
+     * @return the id of the entity at the specified component index, 0 if there is currently no entity at the specified index
+     *         or -1 if the component index is out of range.
+     */
+    public final int getEntityAtComponentIndex(int componentIndex) {
+        if (componentIndex < 0 ||
+            componentIndex > maxComponentIndex) {
+            return -1;
+        }
+        else {
+            return getEntityIdAtComponentIndex(componentIndex);
+        }
+    }
 
     /**
      * Adds a new component of this type to the specified entity.
@@ -309,38 +330,33 @@ public class ComponentType {
                 throw new IllegalArgumentException("The entity " + entityId + " already has a '"+getId()+"' component, can not add another.");
             }
 
-            if (dataBlockSize <= 0) {
-                // No data to save for this component, just mark that the entity contains this component
-                entityIdToComponentIndex.put(entityId, -1);
-            } else {
-                // Reserve the data buffer if needed
-                if (dataBuffer == null) {
-                    // Not yet initialized
-                    componentCapacity = expectedNumberOfComponents;
-                    dataBuffer = ByteBuffer.allocateDirect(componentCapacity * (BLOCK_HEADER_SIZE + dataBlockSize));
-                }
-                else if (componentCount >= componentCapacity * expansionThreshold) {
-                    // Buffer filled, create new larger buffer
-                    final int newComponentCapacity = (int) (componentCapacity * growthFactor);
-                    reallocateDataBuffer(newComponentCapacity);
-                }
+            // Reserve the data buffer if needed
+            if (dataBuffer == null) {
+                // Not yet initialized
+                componentCapacity = expectedNumberOfComponents;
+                dataBuffer = ByteBuffer.allocateDirect(componentCapacity * (BLOCK_HEADER_SIZE + dataBlockSize));
+            }
+            else if (componentCount >= componentCapacity * expansionThreshold) {
+                // Buffer filled, create new larger buffer
+                final int newComponentCapacity = (int) (componentCapacity * growthFactor);
+                reallocateDataBuffer(newComponentCapacity);
+            }
 
-                // Add component:
+            // Add component:
 
-                // Find location where this entityId should be added
-                int componentIndexForNewEntity = findLocationForNewEntityComponent(entityId);
+            // Find location where this entityId should be added
+            int componentIndexForNewEntity = findLocationForNewEntityComponent(entityId);
 
-                // Prefix entity id to the component data block
-                dataBuffer.putInt(componentIndexForNewEntity * (dataBlockSize + BLOCK_HEADER_SIZE), entityId);
+            // Prefix entity id to the component data block
+            dataBuffer.putInt(componentIndexForNewEntity * (dataBlockSize + BLOCK_HEADER_SIZE), entityId);
 
-                // Store mapping
-                entityIdToComponentIndex.put(entityId, componentIndexForNewEntity);
+            // Store mapping
+            entityIdToComponentIndex.put(entityId, componentIndexForNewEntity);
 
-                // Initialize to default values
-                for (Property property : properties) {
-                    if (property.getType().isByteBufferStorable()) {
-                        property.set(entityId, property.getDefaultValue());
-                    }
+            // Initialize to default values
+            for (PropertyBase property : properties) {
+                if (property.getType().isByteBufferStorable()) {
+                    property.set(entityId, property.getDefaultValue());
                 }
             }
 
@@ -361,18 +377,18 @@ public class ComponentType {
      */
     public final void removeFromEntity(int entityId) {
         // Get buffer write lock
+        boolean containedComponent;
         synchronized (dataBufferWriteLock) {
-            if (entityIdToComponentIndex.containsKey(entityId)) {
+            containedComponent = entityIdToComponentIndex.containsKey(entityId);
+            if (containedComponent) {
                 // Remove any value mappings for complex types
-                for (Property property : properties) {
+                for (PropertyBase property : properties) {
                     property.removeFromEntity(entityId);
                 }
 
                 // Mark the data buffer entry as free
                 final int componentIndex = entityIdToComponentIndex.get(entityId);
-                if (componentIndex >= 0) {
-                    dataBuffer.putInt(componentIndex * (dataBlockSize + BLOCK_HEADER_SIZE), 0);
-                }
+                dataBuffer.putInt(componentIndex * (dataBlockSize + BLOCK_HEADER_SIZE), 0);
 
                 // Update maxComponentIndex
                 if (componentIndex >= 0 && componentIndex >= maxComponentIndex) {
@@ -382,45 +398,21 @@ public class ComponentType {
                     }
                 }
 
-                // Compact and shrink the data buffer if the buffer has a component count of less than some constant of the max buffer size
-                int compactedSize = (int) (componentCapacity / growthFactor);
-                if (compactedSize > expectedNumberOfComponents &&
-                    componentCount < compactingThreshold * componentCapacity &&
-                    componentCount < compactedSize) {
-                    // Compact the data buffer
-                    if (maxComponentIndex >= compactedSize) {
-                        int targetIndex = 0;
-                        while (true) {
-                            // Find next free index to copy to
-                            while (!isFreeComponentIndex(targetIndex) &&
-                                   targetIndex < compactedSize &&
-                                   targetIndex < maxComponentIndex) targetIndex++;
-                            int sourceIndex = targetIndex + 1;
-
-                            // Find next source index to copy from
-                            while (isFreeComponentIndex(sourceIndex) && sourceIndex <= maxComponentIndex) sourceIndex++;
-                            if (sourceIndex > maxComponentIndex) break; // Nothing more to move
-
-                            // Move component
-                            moveComponent(sourceIndex, targetIndex);
-                        }
-
-                        // Update maxComponentIndex
-                        maxComponentIndex = compactedSize - 1;
-                        while (maxComponentIndex >= 0 && isFreeComponentIndex(maxComponentIndex)) maxComponentIndex--;
-                    }
-
-                    // Reallocate smaller buffer
-                    reallocateDataBuffer(compactedSize);
-                }
-
                 // Remove mapping for the entity, marking that this component is not present in the entity
                 entityIdToComponentIndex.remove(entityId);
+
+                // Update number of components
+                componentCount--;
+
+                // Reduce size of data buffer if we drop below some fill fraction of it
+                compactDataBufferIfNecessary();
             }
         }
 
-        // Notify entity manager about the component removal
-        entityManager.onComponentRemoved(entityId, this);
+        if (containedComponent) {
+            // Notify entity manager about the component removal
+            entityManager.onComponentRemoved(entityId, this);
+        }
     }
 
     private int findLocationForNewEntityComponent(int entityId) {
@@ -499,6 +491,40 @@ public class ComponentType {
 
         // If we got here there is no more space available
         throw new IllegalStateException("Could not make space for component");
+    }
+
+    private void compactDataBufferIfNecessary() {
+        // Compact and shrink the data buffer if the buffer has a component count of less than some constant of the max buffer size
+        int compactedSize = (int) (componentCapacity / growthFactor);
+        if (compactedSize > expectedNumberOfComponents &&
+            componentCount < compactingThreshold * componentCapacity &&
+            componentCount < compactedSize) {
+            // Compact the data buffer
+            if (maxComponentIndex >= compactedSize) {
+                int targetIndex = 0;
+                while (true) {
+                    // Find next free index to copy to
+                    while (!isFreeComponentIndex(targetIndex) &&
+                           targetIndex < compactedSize &&
+                           targetIndex < maxComponentIndex) targetIndex++;
+                    int sourceIndex = targetIndex + 1;
+
+                    // Find next source index to copy from
+                    while (isFreeComponentIndex(sourceIndex) && sourceIndex <= maxComponentIndex) sourceIndex++;
+                    if (sourceIndex > maxComponentIndex) break; // Nothing more to move
+
+                    // Move component
+                    moveComponent(sourceIndex, targetIndex);
+                }
+
+                // Update maxComponentIndex
+                maxComponentIndex = compactedSize - 1;
+                while (maxComponentIndex >= 0 && isFreeComponentIndex(maxComponentIndex)) maxComponentIndex--;
+            }
+
+            // Reallocate smaller buffer
+            reallocateDataBuffer(compactedSize);
+        }
     }
 
     private void moveComponent(int sourceComponentIndex, int targetComponentIndex) {

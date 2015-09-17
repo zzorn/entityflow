@@ -1,5 +1,7 @@
 package org.entityflow2.group;
 
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSets;
 import net.openhft.koloboke.collect.set.IntSet;
 import org.entityflow2.component.ComponentType;
 
@@ -9,10 +11,9 @@ import org.entityflow2.component.ComponentType;
 public interface EntityGroup {
 
     /**
-     * @return the entities in this group.
-     *         Do not modify the returned set!
+     * @return a read only view of the entities in this group.
      */
-    IntSet getEntities();
+    IntSortedSet getEntities();
 
     /**
      * Called after a group has been created, for each entity that existed before the group was created.

@@ -7,7 +7,7 @@ import org.flowutils.Symbol;
 /**
  * Primitive property accessor.
  */
-public final class IntProperty extends Property<Integer> {
+public final class IntProperty extends PropertyBase<Integer> {
 
     /**
      * @param id                unique id of this property within the component type that it belongs to.

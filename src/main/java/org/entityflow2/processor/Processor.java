@@ -3,12 +3,13 @@ package org.entityflow2.processor;
 import org.entityflow2.ConcurrentEntityManager;
 import org.entityflow2.EntityManager;
 import org.flowutils.time.Time;
+import org.flowutils.updating.Updating;
 
 /**
  * Processors are registered with an EntityManager, and typically process entities with certain component types,
  * updating the component states when update is called.
  */
-public interface Processor {
+public interface Processor extends Updating {
 
     /**
      * Called after the processor has been registered with an entity manager, and before update is called.

@@ -6,6 +6,7 @@ import org.entityflow2.processor.Processor;
 import org.flowutils.Symbol;
 import org.flowutils.service.Service;
 import org.flowutils.time.Time;
+import org.flowutils.updating.Updating;
 
 import java.util.List;
 
@@ -14,20 +15,20 @@ import java.util.List;
  *
  * Manages a set of entities with components of some range of registered types, processed with some registered processors.
  */
-public interface EntityManager extends Service {
+public interface EntityManager extends Service, Updating {
 
 
     /**
      * Add a component type.
      * @return the added component type, for chaining or storing in a field or similar.
      */
-    <T extends ComponentType> T registerComponentType(T componentType);
+    <T extends ComponentType> T addComponentType(T componentType);
 
     /**
      * Add a processor that gets called during updates, and can be used to process entities with some specified component types.
      * @return the added processor, for chaining or storing in a field or similar.
      */
-    <T extends Processor> T registerProcessor(T processor);
+    <T extends Processor> T addProcessor(T processor);
 
     /**
      * @return the component type with the specified id, or null if none found.

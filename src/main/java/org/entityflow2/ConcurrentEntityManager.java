@@ -14,6 +14,8 @@ import org.flowutils.Symbol;
 import org.flowutils.service.ServiceBase;
 import org.flowutils.service.ServiceProvider;
 import org.flowutils.time.Time;
+import org.flowutils.updating.Updating;
+import org.flowutils.updating.strategies.UpdateStrategy;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -46,8 +48,61 @@ public final class ConcurrentEntityManager extends ServiceBase implements Entity
 
     private final List<EntityGroup> groups = new ArrayList<EntityGroup>();
 
+    private UpdateStrategy updateStrategy;
+    private final Updating entityMangerUpdate = new Updating() {
+        @Override public void update(Time time) {
+            doUpdte(time);
+        }
+    };
 
-    @Override public <T extends ComponentType> T registerComponentType(T componentType) {
+    /**
+     */
+    public ConcurrentEntityManager() {
+        this(null, null);
+    }
+
+    /**
+     * @param name name for this EntityManager.  Used in logging etc.
+     */
+    public ConcurrentEntityManager(String name) {
+        this(name, null);
+    }
+
+    /**
+     * @param updateStrategy strategy used for updates, can be used to fine-tune the update interval or timestep.
+     *                       If null, uses the default variable timestep update strategy.
+     */
+    public ConcurrentEntityManager(UpdateStrategy updateStrategy) {
+        this(null, updateStrategy);
+    }
+
+    /**
+     * @param name name for this EntityManager.  Used in logging etc.
+     * @param updateStrategy strategy used for updates, can be used to fine-tune the update interval or timestep.
+     *                       If null, uses the default variable timestep update strategy.
+     */
+    public ConcurrentEntityManager(String name, UpdateStrategy updateStrategy) {
+        super(name);
+        setUpdateStrategy(updateStrategy);
+    }
+
+    /**
+     * @return strategy used for updates, can be used to fine-tune the update interval or timestep.
+     *         If null, uses the default variable timestep update strategy.
+     */
+    public final UpdateStrategy getUpdateStrategy() {
+        return updateStrategy;
+    }
+
+    /**
+     * @param updateStrategy strategy used for updates, can be used to fine-tune the update interval or timestep.
+     *                       If null, uses the default variable timestep update strategy.
+     */
+    public final void setUpdateStrategy(UpdateStrategy updateStrategy) {
+        this.updateStrategy = updateStrategy;
+    }
+
+    @Override public <T extends ComponentType> T addComponentType(T componentType) {
         notNull(componentType, "componentType");
         notContained(componentType, componentTypes, "componentTypes");
         notContained(componentType.getId(), componentTypeLookup, "componentTypeLookup");
@@ -59,7 +114,8 @@ public final class ConcurrentEntityManager extends ServiceBase implements Entity
         return componentType;
     }
 
-    @Override public <T extends Processor> T registerProcessor(T processor) {
+
+    @Override public <T extends Processor> T addProcessor(T processor) {
         notNull(processor, "processor");
         notContained(processor, processors, "processors");
 
@@ -126,6 +182,16 @@ public final class ConcurrentEntityManager extends ServiceBase implements Entity
     }
 
     @Override public void update(Time time) {
+        if (updateStrategy == null) {
+            doUpdte(time);
+        }
+        else {
+            updateStrategy.update(entityMangerUpdate, time);
+        }
+
+    }
+
+    private void doUpdte(Time time) {
         // Update processors
         for (int i = 0; i < processors.size(); i++) {
             processors.get(i).update(time);

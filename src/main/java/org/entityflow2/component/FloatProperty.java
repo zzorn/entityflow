@@ -1,15 +1,13 @@
 package org.entityflow2.component;
 
-import org.entityflow2.range.DoubleRange;
 import org.entityflow2.range.FloatRange;
-import org.entityflow2.type.DoubleType;
 import org.entityflow2.type.FloatType;
 import org.flowutils.Symbol;
 
 /**
  * Primitive property accessor.
  */
-public final class FloatProperty extends Property<Float> {
+public final class FloatProperty extends PropertyBase<Float> {
 
     /**
      * @param id                unique id of this property within the component type that it belongs to.

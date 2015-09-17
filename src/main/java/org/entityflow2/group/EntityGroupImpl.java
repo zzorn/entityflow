@@ -1,5 +1,8 @@
 package org.entityflow2.group;
 
+import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSets;
 import net.openhft.koloboke.collect.set.IntSet;
 import net.openhft.koloboke.collect.set.hash.HashIntSets;
 import net.openhft.koloboke.function.IntConsumer;
@@ -17,7 +20,8 @@ public final class EntityGroupImpl implements EntityGroup {
 
     private static final int EXPECTED_GROUP_SIZE = 1000;
 
-    private final IntSet entities = HashIntSets.newMutableSet(EXPECTED_GROUP_SIZE);
+    private final IntSortedSet entities = new IntAVLTreeSet();
+    private final IntSortedSet readOnlyEntities = IntSortedSets.unmodifiable(entities);
     private final ComponentType[] requiredComponentTypes;
     private final ComponentType[] forbiddenComponentTypes;
 
@@ -70,8 +74,8 @@ public final class EntityGroupImpl implements EntityGroup {
         this.forbiddenComponentTypes = forbiddenComponentTypes.toArray(new ComponentType[forbiddenComponentTypes.size()]);
     }
 
-    @Override public IntSet getEntities() {
-        return entities;
+    @Override public IntSortedSet getEntities() {
+        return readOnlyEntities;
     }
 
     @Override public void handleExistingEntity(int entityId) {

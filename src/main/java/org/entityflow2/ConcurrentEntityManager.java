@@ -161,6 +161,10 @@ public final class ConcurrentEntityManager extends ServiceBase implements Entity
         entitiesToRemove.add(entityId);
     }
 
+    @Override public int getEntityCount() {
+        return existingEntities.size();
+    }
+
     @Override public EntityGroup getEntityGroup(ComponentType... componentTypes) {
         // Find group that matches the criteria
         for (EntityGroup group : groups) {
@@ -182,6 +186,8 @@ public final class ConcurrentEntityManager extends ServiceBase implements Entity
     }
 
     @Override public void update(Time time) {
+        if (!isActive()) throw new IllegalStateException("The EntityManger should be initialized and not shutdown when update is called");
+
         if (updateStrategy == null) {
             doUpdte(time);
         }

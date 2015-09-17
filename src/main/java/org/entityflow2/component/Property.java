@@ -7,7 +7,7 @@ import org.flowutils.Symbol;
 /**
  * A property of a component type with a reference type non-primitive value.
  */
-public class Property<T> extends PropertyBase<T> {
+public final class Property<T> extends PropertyBase<T> {
 
     public Property(Symbol id,
                     ComponentType componentType,

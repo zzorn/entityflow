@@ -49,9 +49,11 @@ public interface EntityManager extends Service, Updating {
 
     /**
      * Deletes the specified entity.
+     * If the entityId does not exist, it is ignored.
      */
     void removeEntity(int entityId);
 
+    int getEntityCount();
 
     EntityGroup getEntityGroup(ComponentType ... componentTypes);
 

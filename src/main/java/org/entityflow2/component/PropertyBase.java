@@ -64,7 +64,6 @@ public abstract class PropertyBase<T> {
         notNull(id, "id");
         notNull(componentType, "componentType");
         notNull(type, "type");
-        notNull(range, "range");
         Check.greaterOrEqual(valueOffset, "valueOffset", -1, "minus one");
 
         this.id = id;

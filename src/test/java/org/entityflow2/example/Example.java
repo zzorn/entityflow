@@ -40,19 +40,19 @@ public class Example {
         createAndRemoveEntities(entityManager, position, physical, 100000);
 
         // Run some updates
-        Stopwatch stopwatch = new Stopwatch("EntityManager Stress Test");
+        Stopwatch stopwatch = new Stopwatch("Immaginary physics");
         ManualTime time = new ManualTime();
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 1000; i++) {
             System.out.println("lap " + i);
             System.out.println("entity count = " + entityManager.getEntityCount());
 
-            time.advanceTimeSeconds(0.1);
+            time.advanceTimeSeconds(0.01);
             time.nextStep();
 
             entityManager.update(time);
             stopwatch.lap();
             stopwatch.printResult();
-            createAndRemoveEntities(entityManager, position, physical, 50);
+            createAndRemoveEntities(entityManager, position, physical, 10);
         }
         stopwatch.printResult();
     }
@@ -76,11 +76,9 @@ public class Example {
                 entityManager.createEntity();
             }
 
-            /* TODO: Fix removal code
             if (randomSequence.nextBoolean(0.3)) {
                 entityManager.removeEntity(randomSequence.nextInt(num));
             }
-             */
         }
     }
 

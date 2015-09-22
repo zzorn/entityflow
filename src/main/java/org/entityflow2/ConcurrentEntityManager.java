@@ -26,12 +26,11 @@ import static org.flowutils.Check.notNull;
 /**
  *
  */
-// TODO: Fix deletion
 // TODO: Implement concurrency
 public final class ConcurrentEntityManager extends ServiceBase implements EntityManager {
 
-    private static final int EXPECTED_ENTITY_COUNT = 100000;
-    private static final int EXPECTED_ADD_DELETE_PER_UPDATE = 1000;
+    public static final int EXPECTED_ENTITY_COUNT = 10000;
+    public static final int EXPECTED_ADD_DELETE_PER_UPDATE = 1000;
 
     private static final int MIN_ENTITY_ID = 1;
     private static final int MAX_ENTITY_ID = Integer.MAX_VALUE - 3;
@@ -42,6 +41,7 @@ public final class ConcurrentEntityManager extends ServiceBase implements Entity
     private final List<Processor> processors = new ArrayList<Processor>();
 
     private final IntSet existingEntities = HashIntSets.newMutableSet(EXPECTED_ENTITY_COUNT);
+    private final IntSet existingEntitiesReadOnly = HashIntSets.newImmutableSet(existingEntities);
     private int lastCreatedEntityId = 0;
     private final Object createDeleteEntityLock = new Object();
 
@@ -164,6 +164,10 @@ public final class ConcurrentEntityManager extends ServiceBase implements Entity
 
     @Override public int getEntityCount() {
         return existingEntities.size();
+    }
+
+    @Override public IntSet getEntityIds() {
+        return existingEntitiesReadOnly;
     }
 
     @Override public EntityGroup getEntityGroup(ComponentType... componentTypes) {

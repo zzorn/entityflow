@@ -121,7 +121,7 @@ public abstract class PropertyBase<T> {
      * @return offset of the data of this property within a component data block,
      *         or -1 if this Property is not stored in a byteBuffer.
      */
-    public final int getValueOffset() {
+    final int getValueOffset() {
         return valueOffset;
     }
 
@@ -149,6 +149,8 @@ public abstract class PropertyBase<T> {
      * @return value of the property for the specified entity, or defaultValue if the property has not yet been set for that entity.
      */
     public final T get(int entityId, T out) {
+        ensureEntityHasComponentType(entityId);
+
         if (complexValues != null) {
             // Get from object storage
             return complexValues.getOrDefault(entityId, defaultValue);
@@ -165,6 +167,8 @@ public abstract class PropertyBase<T> {
      * @param value new value for the component property.
      */
     public final void set(int entityId, T value) {
+        ensureEntityHasComponentType(entityId);
+
         // Clamp value if needed
         if (range != null) {
             value = range.clamp(value);
@@ -194,10 +198,14 @@ public abstract class PropertyBase<T> {
         return componentType.getEntityOffset(entityId) + valueOffset;
     }
 
-
     void removeFromEntity(int entityId) {
         if (!type.isByteBufferStorable()) {
             complexValues.remove(entityId);
         }
+    }
+
+
+    private void ensureEntityHasComponentType(int entityId) {
+        if (!componentType.containedInEntity(entityId)) throw new IllegalArgumentException("The entity with the id " + entityId + " does not have the component type " + componentType.getId());
     }
 }

@@ -11,7 +11,7 @@ import org.flowutils.updating.strategies.FixedTimestepStrategy;
 public class PhysicsProcessor extends EntityProcessor2Base<Position, Physical> {
 
     public PhysicsProcessor(Position position, Physical physical) {
-        super(position, physical, new FixedTimestepStrategy(0.01));
+        super(position, physical, new FixedTimestepStrategy(0.02));
     }
 
     @Override protected void updateEntity(Time time, int entityId, Position position, Physical physical) {
@@ -37,6 +37,7 @@ public class PhysicsProcessor extends EntityProcessor2Base<Position, Physical> {
         x += Math.sqrt(x);
         y += Math.sqrt(x-y/material.getDensity());
         z += Math.sqrt(x*y+mass);
+
         position.x.set(entityId, x);
         position.y.set(entityId, y);
         position.z.set(entityId, z);

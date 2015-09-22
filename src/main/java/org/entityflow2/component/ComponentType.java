@@ -10,6 +10,7 @@ import org.entityflow2.range.DoubleRange;
 import org.entityflow2.range.FloatRange;
 import org.entityflow2.range.IntRange;
 import org.entityflow2.range.Range;
+import org.entityflow2.type.StringType;
 import org.entityflow2.type.Type;
 import org.flowutils.Check;
 import org.flowutils.Symbol;
@@ -199,6 +200,20 @@ public class ComponentType {
      */
     public final DoubleProperty addProperty(String id, double defaultValue, DoubleRange range) {
         return addProperty(new DoubleProperty(Symbol.get(id), this, defaultValue, range));
+    }
+
+    /**
+     * Adds a string property to this component type with no restrictions on the value range.
+     * Typically called from the constructor of a descendant ComponentType.
+     *
+     * Must be called before this ComponentType is applied to any entity.
+     *
+     * @param id unique id of the property within this component type.
+     * @param defaultValue default value for the property.
+     * @return the created property object.
+     */
+    public final Property<String> addProperty(String id, String defaultValue) {
+        return addProperty(id, defaultValue, StringType.TYPE, null);
     }
 
     /**
@@ -448,6 +463,7 @@ public class ComponentType {
             if (entityIdAtComponentIndex > 0 && entityIdAtComponentIndex <= entityId) return componentIndex;
         }
 
+        // No components found, can add component at component index 0
         return 0;
     }
 
@@ -499,27 +515,37 @@ public class ComponentType {
         if (compactedSize > expectedNumberOfComponents &&
             componentCount < compactingThreshold * componentCapacity &&
             componentCount < compactedSize) {
+
             // Compact the data buffer
             if (maxComponentIndex >= compactedSize) {
-                int targetIndex = 0;
-                while (true) {
-                    // Find next free index to copy to
-                    while (!isFreeComponentIndex(targetIndex) &&
-                           targetIndex < compactedSize &&
-                           targetIndex < maxComponentIndex) targetIndex++;
-                    int sourceIndex = targetIndex + 1;
+                // Move all components to the start of the data buffer
+                int lastSource = 0;
+                for (int targetIndex = 0; targetIndex < componentCount; targetIndex++) {
+                    if (isFreeComponentIndex(targetIndex)) {
+                        // Move next non-empty component here
+                        for (int sourceIndex = Math.max(targetIndex + 1, lastSource + 1); sourceIndex <= maxComponentIndex; sourceIndex++) {
+                            if (!isFreeComponentIndex(sourceIndex)) {
+                                // Move component
+                                moveComponent(sourceIndex, targetIndex);
+                                lastSource = sourceIndex;
 
-                    // Find next source index to copy from
-                    while (isFreeComponentIndex(sourceIndex) && sourceIndex <= maxComponentIndex) sourceIndex++;
-                    if (sourceIndex > maxComponentIndex) break; // Nothing more to move
-
-                    // Move component
-                    moveComponent(sourceIndex, targetIndex);
+                                // We found something for the target index, stop loop here
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 // Update maxComponentIndex
-                maxComponentIndex = compactedSize - 1;
-                while (maxComponentIndex >= 0 && isFreeComponentIndex(maxComponentIndex)) maxComponentIndex--;
+                maxComponentIndex = componentCount - 1;
+
+                /*
+                // DEBUG:
+                // Verify that the rest of the data buffer does not contain any components
+                for (int i = componentCount; i < componentCapacity; i++) {
+                    if (!isFreeComponentIndex(i)) throw new IllegalStateException("Unused part of data buffer contains component at " + i);
+                }
+                */
             }
 
             // Reallocate smaller buffer
@@ -530,11 +556,19 @@ public class ComponentType {
     private void moveComponent(int sourceComponentIndex, int targetComponentIndex) {
         final int blockSize = dataBlockSize + BLOCK_HEADER_SIZE;
 
+        // Get id of entity to be moved
         final int movedEntityId = getEntityIdAtComponentIndex(sourceComponentIndex);
+
+        // Copy source data to target
         for (int dataIndex = 0; dataIndex < blockSize; dataIndex++) {
             dataBuffer.put(targetComponentIndex * blockSize + dataIndex, dataBuffer.get(sourceComponentIndex * blockSize + dataIndex));
         }
+
         if (movedEntityId != 0) {
+            // Clear entity id at source
+            dataBuffer.putInt(sourceComponentIndex * blockSize, 0);
+
+            // Update mapping
             entityIdToComponentIndex.put(movedEntityId, targetComponentIndex);
         }
     }
@@ -552,10 +586,13 @@ public class ComponentType {
         if (newComponentCapacity < maxComponentIndex) throw new IllegalArgumentException("Existing components will not fit");
 
         // Allocate new buffer
-        final ByteBuffer newDataBuffer = ByteBuffer.allocateDirect(newComponentCapacity * (BLOCK_HEADER_SIZE + dataBlockSize));
+        final int blockSize = BLOCK_HEADER_SIZE + dataBlockSize;
+        final ByteBuffer newDataBuffer = ByteBuffer.allocateDirect(newComponentCapacity * blockSize);
 
         // Copy over existing values
         dataBuffer.clear();
+        dataBuffer.position(0);
+        dataBuffer.limit((maxComponentIndex+1) * blockSize);
         newDataBuffer.put(dataBuffer);
         newDataBuffer.clear();
         dataBuffer = newDataBuffer;

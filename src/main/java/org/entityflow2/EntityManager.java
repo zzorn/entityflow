@@ -1,5 +1,6 @@
 package org.entityflow2;
 
+import net.openhft.koloboke.collect.set.IntSet;
 import org.entityflow2.component.ComponentType;
 import org.entityflow2.group.EntityGroup;
 import org.entityflow2.processor.Processor;
@@ -54,6 +55,11 @@ public interface EntityManager extends Service, Updating {
     void removeEntity(int entityId);
 
     int getEntityCount();
+
+    /**
+     * @return read only set with ids of all existing entities.
+     */
+    IntSet getEntityIds();
 
     EntityGroup getEntityGroup(ComponentType ... componentTypes);
 
